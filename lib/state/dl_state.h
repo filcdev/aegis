@@ -18,9 +18,6 @@ struct StateDisplay {
     uint8_t icon_char_code;
     char status_char;
     const char* message;
-    bool is_transient;
-    AppState next_state;
-    unsigned long transient_duration_ms;
 };
 
 class StateHandler {
@@ -42,7 +39,6 @@ private:
     bool initialized = false;
     uint8_t lcd_cols;
     uint8_t lcd_rows;
-    unsigned long _transient_state_entry_time = 0;
 
     char _temp_message[17] = "";
     unsigned long _temp_message_expiry = 0;

@@ -16,7 +16,6 @@ Logger logger("MAIN");
 // Task handles
 static TaskHandle_t taskRFIDHandle = nullptr;
 static TaskHandle_t taskCommHandle = nullptr;
-static TaskHandle_t taskMainHandle = nullptr;
 
 // Watchdog timing
 static const uint32_t WATCHDOG_TIMEOUT_MS = 15000; // 15s
@@ -59,9 +58,7 @@ void taskRFID(void* pvParameters) {
     if (tag.length() > 0) {
       char buf[TAG_MAX_LEN];
       strlcpy(buf, tag.c_str(), TAG_MAX_LEN);
-      if (xQueueSend(tagQueue, buf, pdMS_TO_TICKS(10)) != pdPASS) {
-        logger.error("Tag queue full");
-      }
+      if (xQueueSend(tagQueue, buf, pdMS_TO_TICKS(10)) != pdPASS) { /* drop */ }
     }
     feedRFIDWatchdog();
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -141,8 +138,6 @@ void setup(){
   xTaskCreatePinnedToCore(taskComm, "COMM", 4096, nullptr, 1, &taskCommHandle, 1); // Core 1
 
   stateHandler.setState(AppState::READY);
-
-  taskMainHandle = xTaskGetCurrentTaskHandle();
 }
 
 void loop(){

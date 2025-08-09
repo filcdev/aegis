@@ -10,7 +10,6 @@
 
 extern SemaphoreHandle_t lcdMutex; // created as recursive mutex
 extern SemaphoreHandle_t loggerMutex;
-extern SemaphoreHandle_t stateMutex;
 extern QueueHandle_t tagQueue;
 
 // Non-recursive lock guard
