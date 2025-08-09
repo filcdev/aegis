@@ -1,4 +1,5 @@
 #include "dl_logger.h"
+#include "dl_concurrency.h"
 
 Logger::Logger(const char* ns) {
     strncpy(_namespace, ns, 4);
@@ -25,7 +26,13 @@ void Logger::log(LogLevel level, const char* format, va_list args) {
     char buffer[256];
     vsnprintf(buffer, sizeof(buffer), format, args);
 
-    Serial.printf("%s | %c | %s\n", _namespace, level_char, buffer);
+    if (loggerMutex && xSemaphoreTake(loggerMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        Serial.printf("%s | %c | %s\n", _namespace, level_char, buffer);
+        xSemaphoreGive(loggerMutex);
+    } else {
+        // Fallback without mutex if not initialized yet
+        Serial.printf("%s | %c | %s\n", _namespace, level_char, buffer);
+    }
 }
 
 void Logger::debug(const char* format, ...) {

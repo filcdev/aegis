@@ -1,4 +1,5 @@
 #include "dl_state.h"
+#include "dl_concurrency.h"
 
 // Custom character definitions
 byte wifi_char[8] = {
@@ -125,6 +126,8 @@ AppState StateHandler::getState() {
 
 void StateHandler::updateDisplay() {
     if (!initialized || !lcd) return;
+
+    LcdLockGuard lock; if (!lock.locked()) return;
 
     lcd->clear();
 

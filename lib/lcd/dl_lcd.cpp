@@ -1,5 +1,6 @@
 #include "dl_lcd.h"
 #include "dl_board_config.h"
+#include "dl_concurrency.h"
 
 LCDHandler::LCDHandler() {}
 
@@ -27,14 +28,16 @@ void LCDHandler::loop() {
 
 void LCDHandler::clear() {
     if (!initialized) return;
+    LcdLockGuard lock; if (!lock.locked()) return;
     _lcd->clear();
 }
 
 void LCDHandler::displayMessage(const char* message, uint8_t row) {
     if (!initialized) return;
+    LcdLockGuard lock; if (!lock.locked()) return;
     setCursor(0, row);
     for (int i = 0; i < _cols; i++) {
-        print(" ");
+        _lcd->print(" ");
     }
     setCursor(0, row);
     _lcd->print(message);
@@ -42,6 +45,8 @@ void LCDHandler::displayMessage(const char* message, uint8_t row) {
 
 void LCDHandler::displayScrollableMessage(const String& message, uint8_t row) {
     if (!initialized) return;
+
+    LcdLockGuard lock; if (!lock.locked()) return;
 
     displayMessage("", row);
     setCursor(0, row);
@@ -53,7 +58,6 @@ void LCDHandler::displayScrollableMessage(const String& message, uint8_t row) {
         _lcd->print(message.c_str());
     } else {
         _lcd->print((message.substring(0, _cols - 1) + String(">")).c_str());
-        
         _scrollingMessage = message;
         _scrollingRow = row;
         _scrollPos = 0;
@@ -67,6 +71,7 @@ void LCDHandler::displayScrollableMessage(const String& message, uint8_t row) {
 
 void LCDHandler::print(const char* message) {
     if (!initialized) return;
+    LcdLockGuard lock; if (!lock.locked()) return;
     _lcd->print(message);
 }
 
@@ -77,11 +82,13 @@ void LCDHandler::setCursor(uint8_t col, uint8_t row) {
 
 void LCDHandler::createChar(uint8_t location, uint8_t charmap[]) {
     if (!initialized) return;
+    LcdLockGuard lock; if (!lock.locked()) return;
     _lcd->createChar(location, charmap);
 }
 
 void LCDHandler::writeChar(uint8_t location) {
     if (!initialized) return;
+    LcdLockGuard lock; if (!lock.locked()) return;
     _lcd->write(location);
 }
 
@@ -107,6 +114,7 @@ void LCDHandler::_updateScrollingText() {
             return;
         }
 
+        LcdLockGuard lock; if (!lock.locked()) return;
         setCursor(0, _scrollingRow);
         String text_to_display = _scrollingMessage + "   ";
         String frame = "";
