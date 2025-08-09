@@ -91,6 +91,34 @@ void StateHandler::setState(AppState new_state) {
     updateDisplay();
 }
 
+void StateHandler::showMessage(const char* message, unsigned int duration_ms) {
+    if (!initialized) return;
+    strncpy(_temp_message, message, 16);
+    _temp_message[16] = '\0';
+    _temp_message_expiry = millis() + duration_ms;
+    _is_showing_temp_message = true;
+    updateDisplay();
+}
+
+void StateHandler::loop() {
+    if (_is_showing_temp_message && millis() >= _temp_message_expiry) {
+        _is_showing_temp_message = false;
+        updateDisplay();
+    }
+
+    // Transition from MQTT_OK to READY after a delay
+    if (currentState == AppState::MQTT_OK) {
+        static unsigned long mqtt_ok_time = 0;
+        if (mqtt_ok_time == 0) {
+            mqtt_ok_time = millis();
+        }
+        if (millis() - mqtt_ok_time > 2000) {
+            setState(AppState::READY);
+            mqtt_ok_time = 0; // Reset for next time
+        }
+    }
+}
+
 AppState StateHandler::getState() {
     return currentState;
 }
@@ -98,13 +126,20 @@ AppState StateHandler::getState() {
 void StateHandler::updateDisplay() {
     if (!initialized || !lcd) return;
 
-    StateDisplay display = stateDisplays[(int)currentState];
-    
     lcd->clear();
-    lcd->setCursor(0, 0);
-    lcd->print(display.message);
+
+    // Display temporary message if active, otherwise display current state message
+    if (_is_showing_temp_message) {
+        lcd->setCursor(0, 0);
+        lcd->print(_temp_message);
+    } else {
+        StateDisplay display = stateDisplays[(int)currentState];
+        lcd->setCursor(0, 0);
+        lcd->print(display.message);
+    }
     
-    // Display status icon and char on second row, right-aligned
+    // Display status icon and char on the bottom row, right-aligned
+    StateDisplay display = stateDisplays[(int)currentState];
     lcd->setCursor(lcd_cols - 2, 1);
     lcd->writeChar(display.icon_char_code);
     lcd->print(String(display.status_char).c_str());

@@ -78,6 +78,7 @@ void setup(){
 }
 
 void loop(){
+  stateHandler.loop();
   mqttHandler.loop();
   String tag = rdm6300Handler.readTag();
   if (tag != "") {
