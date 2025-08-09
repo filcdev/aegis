@@ -45,6 +45,17 @@ byte boot_char[8] = {
   0b00000
 };
 
+byte mqtt_char[8] = {
+  0b00000,
+  0b01110,
+  0b10001,
+  0b00110,
+  0b01001,
+  0b10010,
+  0b01100,
+  0b00000
+};
+
 
 StateHandler::StateHandler() {}
 
@@ -58,6 +69,7 @@ void StateHandler::begin(LCDHandler& lcd_handler) {
     lcd->createChar(1, wifi_char);
     lcd->createChar(2, check_char);
     lcd->createChar(3, cross_char);
+    lcd->createChar(4, mqtt_char);
 
     registerStateDisplays();
     initialized = true;
@@ -67,6 +79,8 @@ void StateHandler::registerStateDisplays() {
     stateDisplays[(int)AppState::BOOTING] = {0, 'B', "Booting..."};
     stateDisplays[(int)AppState::WIFI_CONNECTING] = {1, 'W', "Connecting WiFi"};
     stateDisplays[(int)AppState::WIFI_CONNECTED] = {2, 'W', "WiFi OK"};
+    stateDisplays[(int)AppState::MQTT_CONNECTING] = {4, 'M', "Connecting MQTT"};
+    stateDisplays[(int)AppState::MQTT_OK] = {2, 'M', "MQTT OK"};
     stateDisplays[(int)AppState::READY] = {2, 'R', "Ready"};
     stateDisplays[(int)AppState::ERROR] = {3, 'E', "Error!"};
 }

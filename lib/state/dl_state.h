@@ -8,6 +8,8 @@ enum class AppState {
     BOOTING,
     WIFI_CONNECTING,
     WIFI_CONNECTED,
+    MQTT_CONNECTING,
+    MQTT_OK,
     READY,
     ERROR
 };
@@ -31,7 +33,7 @@ private:
 
     LCDHandler* lcd = nullptr;
     AppState currentState;
-    StateDisplay stateDisplays[5]; // One for each AppState
+    StateDisplay stateDisplays[7]; // One for each AppState
     bool initialized = false;
     uint8_t lcd_cols;
     uint8_t lcd_rows;

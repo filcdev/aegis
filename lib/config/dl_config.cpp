@@ -1,9 +1,12 @@
 #include "dl_config.h"
+#include "dl_logger.h"
+
+static Logger logger("CONF");
 
 bool Config::load(fs::FS &fs, const char *path) {
   File file = fs.open(path, "r");
   if (!file) {
-    Serial.println("Failed to open config file");
+    logger.error("Failed to open config file");
     return false;
   }
 
@@ -11,11 +14,11 @@ bool Config::load(fs::FS &fs, const char *path) {
   file.close();
 
   if (error) {
-    Serial.print("Failed to parse config file: ");
-    Serial.println(error.c_str());
+    logger.error("Failed to parse config file: %s", error.c_str());
     return false;
   }
 
+  logger.info("Config loaded from %s", path);
   loaded = true;
   return true;
 }
@@ -41,8 +44,9 @@ float Config::getFloat(const char* key, float defaultValue) {
 }
 
 void Config::printConfig() {
-  serializeJsonPretty(doc, Serial);
-  Serial.println();
+  String output;
+  serializeJsonPretty(doc, output);
+  logger.info("Current configuration:\n%s", output.c_str());
 }
 
 // Global config instance

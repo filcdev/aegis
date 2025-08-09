@@ -1,11 +1,14 @@
 #include "dl_sd.h"
 #include "dl_board_config.h"
+#include "dl_logger.h"
+
+static Logger logger("CARD");
 
 SDCardHandler::SDCardHandler(uint8_t chipSelectPin) : csPin(chipSelectPin) {}
 
 bool SDCardHandler::begin() {
   if (!SD.begin(csPin)) {
-    Serial.println("Card Mount Failed");
+    logger.error("Mount Failed");
     initialized = false;
     return false;
   }
@@ -13,22 +16,15 @@ bool SDCardHandler::begin() {
   uint8_t cardType = SD.cardType();
 
   if (cardType == CARD_NONE) {
-    Serial.println("No SD card attached");
+    logger.error("No SD card attached");
     initialized = false;
     return false;
   }
 
   initialized = true;
 
-  Serial.print("SD Card Type: ");
-  switch (cardType) {
-    case CARD_MMC: Serial.println("MMC"); break;
-    case CARD_SD: Serial.println("SDSC"); break;
-    case CARD_SDHC: Serial.println("SDHC"); break;
-    default: Serial.println("UNKNOWN"); break;
-  }
-
-  Serial.printf("SD Card Size: %lluMB\n", SD.cardSize() / (1024 * 1024));
+  logger.info("SD Card Type: %s", getCardType().c_str());
+  logger.info("SD Card Size: %lluMB", SD.cardSize() / (1024 * 1024));
   return true;
 }
 
@@ -51,42 +47,38 @@ uint64_t SDCardHandler::getCardSizeMB() {
 }
 
 void SDCardHandler::listDir(const char* dirname, uint8_t levels) {
-  Serial.printf("Listing directory: %s\n", dirname);
+  logger.info("Listing directory: %s", dirname);
 
   File root = SD.open(dirname);
   if (!root) {
-    Serial.println("Failed to open directory");
+    logger.error("Failed to open directory");
     return;
   }
   if (!root.isDirectory()) {
-    Serial.println("Not a directory");
+    logger.error("Not a directory");
     return;
   }
 
   File file = root.openNextFile();
   while (file) {
     if (file.isDirectory()) {
-      Serial.print("  DIR : ");
-      Serial.println(file.name());
+      logger.info("  DIR : %s", file.name());
       if (levels) {
         listDir(file.name(), levels - 1);
       }
     } else {
-      Serial.print("  FILE: ");
-      Serial.print(file.name());
-      Serial.print("  SIZE: ");
-      Serial.println(file.size());
+      logger.info("  FILE: %s, SIZE: %d", file.name(), file.size());
     }
     file = root.openNextFile();
   }
 }
 
 void SDCardHandler::readFile(const char* path) {
-  Serial.printf("Reading file: %s\n", path);
+  logger.info("Reading file: %s", path);
 
   File file = SD.open(path);
   if (!file) {
-    Serial.println("Failed to open file for reading");
+    logger.error("Failed to open file for reading");
     return;
   }
 
@@ -97,77 +89,85 @@ void SDCardHandler::readFile(const char* path) {
 }
 
 bool SDCardHandler::writeFile(const char* path, const char* message) {
-  Serial.printf("Writing file: %s\n", path);
+  logger.info("Writing file: %s", path);
 
   File file = SD.open(path, FILE_WRITE);
   if (!file) {
-    Serial.println("Failed to open file for writing");
+    logger.error("Failed to open file for writing");
     return false;
   }
 
   bool success = file.print(message);
   file.close();
 
-  Serial.println(success ? "File written" : "Write failed");
+  if(success) {
+    logger.info("File written");
+  } else {
+    logger.error("Write failed");
+  }
   return success;
 }
 
 bool SDCardHandler::appendFile(const char* path, const char* message) {
-  Serial.printf("Appending to file: %s\n", path);
+  logger.info("Appending to file: %s", path);
 
   File file = SD.open(path, FILE_APPEND);
   if (!file) {
-    Serial.println("Failed to open file for appending");
+    logger.error("Failed to open file for appending");
     return false;
   }
 
   bool success = file.print(message);
   file.close();
 
-  Serial.println(success ? "Message appended" : "Append failed");
+  if(success) {
+    logger.info("Message appended");
+  } else {
+    logger.error("Append failed");
+  }
   return success;
 }
 
 bool SDCardHandler::deleteFile(const char* path) {
-  Serial.printf("Deleting file: %s\n", path);
+  logger.info("Deleting file: %s", path);
   if (SD.remove(path)) {
-    Serial.println("File deleted");
+    logger.info("File deleted");
     return true;
   } else {
-    Serial.println("Delete failed");
+    logger.error("Delete failed");
     return false;
   }
 }
 
 bool SDCardHandler::renameFile(const char* path1, const char* path2) {
-  Serial.printf("Renaming file %s to %s\n", path1, path2);
+  logger.info("Renaming file %s to %s", path1, path2);
   if (SD.rename(path1, path2)) {
-    Serial.println("File renamed");
+    logger.info("File renamed");
     return true;
   } else {
-    Serial.println("Rename failed");
+    logger.error("Rename failed");
     return false;
   }
 }
 
 bool SDCardHandler::createDir(const char* path) {
-  Serial.printf("Creating Dir: %s\n", path);
+  logger.info("Creating Dir: %s", path);
   if (SD.mkdir(path)) {
-    Serial.println("Dir created");
+    logger.info("Dir created");
     return true;
   } else {
-    Serial.println("mkdir failed");
+    logger.error("mkdir failed");
     return false;
   }
 }
 
 bool SDCardHandler::removeDir(const char* path) {
-  Serial.printf("Removing Dir: %s\n", path);
+  logger.info("Removing Dir: %s", path);
   if (SD.rmdir(path)) {
-    Serial.println("Dir removed");
+    logger.info("Dir removed");
     return true;
   } else {
-    Serial.println("rmdir failed");
+    logger.error("rmdir failed");
     return false;
   }
 }
