@@ -8,6 +8,8 @@
 #define DL_LCD_ADDR 0x27
 #define DL_LCD_COLS 16
 #define DL_LCD_ROWS 2
+#define SCROLL_START_DELAY_MS 500
+#define SCROLL_DELAY_MS 300
 
 // Boot Logo
 #define DL_BOOT_LOGO_DURATION 2000

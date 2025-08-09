@@ -13,6 +13,7 @@ public:
     void reconnect();
 
 private:
+    static void callback(char* topic, byte* payload, unsigned int length);
     WiFiClient _wifiClient;
     PubSubClient _mqttClient;
     String _host;

@@ -77,6 +77,7 @@ void setup(){
 void loop(){
   stateHandler.loop();
   mqttHandler.loop();
+  lcd.loop();
   String tag = rdm6300Handler.readTag();
   if (tag != "") {
     logger.info("Tag scanned: %s", tag.c_str());
