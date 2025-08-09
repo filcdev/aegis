@@ -8,16 +8,13 @@
 #include <dl_rdm6300.h>
 #include <dl_mqtt.h>
 #include "dl_logger.h"
+#include "dl_fatal.h"
 
 Logger logger("MAIN");
 
 void die(const char* message) {
-  logger.error("Fatal: %s", message);
   stateHandler.setState(AppState::ERROR);
-  lcd.setCursor(0,1);
-  lcd.print(message);
-  delay(10000);
-  esp_restart();
+  fatal_error(message, 10000);
 }
 
 void flashBootLogo() {

@@ -10,6 +10,7 @@ public:
     void begin(const String& host, int port, const char* hostname, const char* apiKey);
     void loop();
     void publishTag(const String& tag);
+    void reconnect();
 
 private:
     WiFiClient _wifiClient;
@@ -17,7 +18,7 @@ private:
     String _host;
     String _hostname;
     String _apiKey;
-    void reconnect();
+    int _reconnectAttempts = 0;
 };
 
 extern MQTTHandler mqttHandler;
