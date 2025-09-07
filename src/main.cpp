@@ -46,7 +46,7 @@ void flashBootLogo() {
     LcdLockGuard lock; if (!lock.locked()) return;
     lcd.clear();
     lcd.setCursor(3, 0);
-    lcd.print("DLock v1.0");
+    lcd.print("Aegis v1.0");
     delay(DL_BOOT_LOGO_DURATION);
 }
 
@@ -78,7 +78,7 @@ void taskComm(void* pvParameters) {
 void setup(){
   Serial.begin(115200);
   initConcurrency();
-  logger.info("DLock booting...");
+  logger.info("Aegis lock booting...");
 
   lcd.begin(DL_LCD_ADDR, DL_LCD_COLS, DL_LCD_ROWS);
   stateHandler.begin(lcd);
