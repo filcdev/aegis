@@ -13,9 +13,8 @@ MQTTHandler mqttHandler;
 void MQTTHandler::callback(char* topic, byte* payload, unsigned int length) {
     logger.info("Message arrived [%s]", topic);
 
-    // For now, we only care about the reply topic.
-    String replyTopic = "dlock/" + mqttHandler._hostname + "/reply";
-    if (replyTopic.equals(topic)) {
+    String cmdTopic = MQTT_TOPIC_BASE + mqttHandler._hostname + "/command";
+    if (cmdTopic.equals(topic)) {
         JsonDocument doc;
         DeserializationError error = deserializeJson(doc, payload, length);
 
@@ -36,6 +35,7 @@ void MQTTHandler::callback(char* topic, byte* payload, unsigned int length) {
 
 void MQTTHandler::begin(const String& host, int port, const char* hostname, const char* apiKey) {
     _host = host;
+    _heartbeatMs = 0;
     _hostname = hostname;
     _apiKey = apiKey;
     _mqttClient.setClient(_wifiClient);
@@ -52,15 +52,9 @@ void MQTTHandler::reconnect() {
             stateHandler.setState(AppState::MQTT_OK);
             _reconnectAttempts = 0;
 
-            // Subscribe to reply topic
-            String replyTopic = "dlock/" + _hostname + "/reply";
-            _mqttClient.subscribe(replyTopic.c_str());
-            logger.info("Subscribed to %s", replyTopic.c_str());
-
-            // Publish register message
-            String topic = "dlock/" + _hostname + "/register";
-            String payload = "{\"api_key\": \"" + _apiKey + "\"}";
-            _mqttClient.publish(topic.c_str(), payload.c_str());
+            String cmdTopic = MQTT_TOPIC_BASE + _hostname + "/command";
+            _mqttClient.subscribe(cmdTopic.c_str());
+            logger.info("Subscribed to %s", cmdTopic.c_str());
         } else {
             logger.error("failed, rc=%d", _mqttClient.state());
             _reconnectAttempts++;
@@ -74,14 +68,51 @@ void MQTTHandler::reconnect() {
 
 void MQTTHandler::loop() {
     if (!_mqttClient.connected()) {
+        stateHandler.setState(AppState::MQTT_CONNECTING);
         reconnect();
+    } else if (stateHandler.getState() == AppState::MQTT_CONNECTING) {
+        stateHandler.setState(AppState::MQTT_OK);
     }
+
+    if (millis() - _heartbeatMs > 5000) {
+        publishHeartbeat();
+        _heartbeatMs = millis();
+    }
+
     _mqttClient.loop();
+}
+
+void MQTTHandler::publishHeartbeat() {
+    if (_mqttClient.connected()) {
+        String topic = MQTT_TOPIC_BASE + _hostname + "/events/heartbeat";
+        JsonDocument doc;
+        doc["timestamp"] = (uint32_t)(millis() / 1000);
+        String payload;
+        serializeJson(doc, payload);
+        _mqttClient.publish(topic.c_str(), payload.c_str());
+    }
 }
 
 void MQTTHandler::publishTag(const String& tag) {
     if (_mqttClient.connected()) {
-        String topic = "dlock/" + _hostname + "/tag";
-        _mqttClient.publish(topic.c_str(), tag.c_str());
+        String topic = MQTT_TOPIC_BASE + _hostname + "/events/rfid";
+        JsonDocument doc;
+        doc["tag"] = tag;
+        doc["timestamp"] = (uint32_t)(millis() / 1000);
+        String payload;
+        serializeJson(doc, payload);
+        _mqttClient.publish(topic.c_str(), payload.c_str());
+    }
+}
+
+void MQTTHandler::publishButtonPress() {
+    if (_mqttClient.connected()) {
+        String topic = MQTT_TOPIC_BASE + _hostname + "/events/button";
+        JsonDocument doc;
+        doc["timestamp"] = (uint32_t)(millis() / 1000);
+        String payload;
+        serializeJson(doc, payload);
+        logger.info("Publishing to %s: %s", topic.c_str(), payload.c_str());
+        _mqttClient.publish(topic.c_str(), payload.c_str());
     }
 }
