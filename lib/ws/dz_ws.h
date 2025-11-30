@@ -3,6 +3,7 @@
 
 #include <WebSocketsClient.h>
 #include <Arduino.h>
+#include "dz_db.h"
 
 class DZWSControl {
 public:
@@ -10,6 +11,7 @@ public:
   void begin();
   void handle();
   void send(String message);
+  void sendCardRead(const std::string& uid, bool granted, bool isButton = false);
 
 private:
   WebSocketsClient webSocket;
@@ -18,7 +20,6 @@ private:
   static String getResetReason();
   
   void sendPing();
-  void sendHello();
 
   bool helloMessageSent = false;
   unsigned long lastPingTime = 0;

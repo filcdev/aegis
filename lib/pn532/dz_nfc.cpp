@@ -67,15 +67,6 @@ void DZNFCControl::handle()
     } else {
       state.message = "Access Denied";
     }
-
-    JsonDocument doc;
-    doc["type"] = "card-read";
-    doc["uid"] = uidStr;
-    doc["authorized"] = authorized;
-    doc["name"] = name;
-    
-    String msg;
-    serializeJson(doc, msg);
-    wsControl.send(msg);
+    wsControl.sendCardRead(uidStr, authorized);
   }
 }

@@ -3,6 +3,7 @@
 #include "dz_state.h"
 #include "dz_db.h"
 #include "dz_ota.h"
+#include "dz_config.h"
 
 DZWSControl wsControl;
 
@@ -42,12 +43,14 @@ void DZWSControl::sendPing() {
   
   JsonDocument doc;
   doc["type"] = "ping";
-  doc["uptime"] = millis();
+  doc["fwVersion"] = FW_VERSION;
+  doc["uptime"] = millis()/1000;
   doc["ram"] = ESP.getFreeHeap();
   doc["storage"]["total"] = SPIFFS.totalBytes();
   doc["storage"]["used"] = SPIFFS.usedBytes();
   
   doc["debug"]["deviceState"] = state.deviceState;
+  doc["debug"]["lastResetReason"] = getResetReason();
   doc["debug"]["errors"]["nfc"] = state.error.nfc.hasError;
   doc["debug"]["errors"]["sd"] = state.error.sd.hasError;
   doc["debug"]["errors"]["wifi"] = state.error.wifi.hasError;
@@ -59,16 +62,15 @@ void DZWSControl::sendPing() {
   send(msg);
 }
 
-void DZWSControl::sendHello() {
+void DZWSControl::sendCardRead(const std::string& uid, bool granted, bool isButton = false) {
   JsonDocument doc;
-  doc["type"] = "hello";
-  doc["api_key"] = cfg.api_key;
-  doc["reset_reason"] = getResetReason();
-  
-  String helloMsg;
-  serializeJson(doc, helloMsg);
-  send(helloMsg);
-  helloMessageSent = true;
+  doc["type"] = "card-read";
+  doc["uid"] = uid;
+  doc["granted"] = granted;
+  doc["isButton"] = isButton;
+  String msg;
+  serializeJson(doc, msg);
+  send(msg);
 }
 
 String DZWSControl::getResetReason() {
@@ -99,9 +101,6 @@ void DZWSControl::webSocketEvent(WStype_t type, uint8_t * payload, size_t length
     case WStype_CONNECTED:
       state.error.webSocket.hasError = false;
       state.error.webSocket.message = "";
-      if (!wsControl.helloMessageSent) {
-        wsControl.sendHello();
-      }
       break;
     case WStype_TEXT:
       handleIncomingMessage(std::string((char*)payload, length));

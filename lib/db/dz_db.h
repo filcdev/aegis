@@ -11,7 +11,6 @@
 struct UidEntry {
   std::string uid;
   std::string name;
-  bool authorized;
 };
 
 class DZDBControl

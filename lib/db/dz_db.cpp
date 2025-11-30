@@ -26,9 +26,7 @@ bool DZDBControl::saveUIDs()
   
   JsonDocument doc;
   for (const auto& entry : uids) {
-    JsonArray arr = doc[entry.uid].to<JsonArray>();
-    arr.add(entry.name);
-    arr.add(entry.authorized);
+    doc[entry.uid] = entry.name;
   }
 
   if (serializeJson(doc, file) == 0) {
@@ -46,12 +44,10 @@ bool DZDBControl::saveUIDs()
 
 bool DZDBControl::isAuthorized(const std::string& uid, std::string &nameOut)
 {
-  Serial.println(("Checking UID: " + uid).c_str());
   for (const auto& entry : uids) {
     if (entry.uid == uid) {
-      Serial.println(("Authorized UID found: " + uid + ", Name: " + entry.name).c_str());
       nameOut = entry.name;
-      return entry.authorized;
+      return true;
     }
   }
   return false;
@@ -85,9 +81,9 @@ bool DZDBControl::loadUIDs()
   JsonObject root = doc.as<JsonObject>();
   for (JsonPair kv : root) {
     std::string uid = kv.key().c_str();
-    JsonArray arr = kv.value().as<JsonArray>();
-    if (arr.size() >= 2) {
-        uids.push_back({uid, arr[0].as<std::string>(), arr[1].as<bool>()});
+    if(kv.value().is<const char*>()) {
+      std::string name = kv.value().as<std::string>();
+      uids.push_back({uid, name});
     }
   }
 
@@ -101,9 +97,9 @@ void DZDBControl::updateFromJSON(JsonObject root)
   uids.clear();
   for (JsonPair kv : root) {
     std::string uid = kv.key().c_str();
-    JsonArray arr = kv.value().as<JsonArray>();
-    if (arr.size() >= 2) {
-        uids.push_back({uid, arr[0].as<std::string>(), arr[1].as<bool>()});
+    if(kv.value().is<const char*>()) {
+      std::string name = kv.value().as<std::string>();
+      uids.push_back({uid, name});
     }
   }
   saveUIDs();

@@ -1,6 +1,8 @@
 #ifndef DZ_CONFIG_H
 #define DZ_CONFIG_H
 
+#define FW_VERSION "1.0.0"
+
 #define DOOR_PIN (5)
 #define BUZZER_PIN (18) // TODO: Not used yet
 #define BUTTON_PIN (26)

@@ -2,6 +2,7 @@
 #include "dz_config.h"
 #include "dz_button.h"
 #include "dz_state.h"
+#include "dz_ws.h"
 
 DZButton::DZButton() {}
 
@@ -18,6 +19,7 @@ void DZButton::handle() {
       state.header = "Aegis  <<";
       state.message = "Door Open";
       lastDebounceTime = millis();
+      wsControl.sendCardRead("", true, true);
     }
   }
 }
