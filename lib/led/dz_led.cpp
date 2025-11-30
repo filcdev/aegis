@@ -131,7 +131,6 @@ void DZLEDControl::handleDoorState(unsigned long now, unsigned long dt) {
       for (int i = 0; i < 8; ++i) {
         pixels.setPixelColor(i, pixels.Color(0, 0, v));
       }
-      pixels.clear();
       pixels.show();
     }
 }

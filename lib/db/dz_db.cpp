@@ -92,13 +92,15 @@ bool DZDBControl::loadUIDs()
   return true;
 }
 
-void DZDBControl::updateFromJSON(JsonObject root)
+void DZDBControl::updateFromJSON(JsonArray root)
 {
   uids.clear();
-  for (JsonPair kv : root) {
-    std::string uid = kv.key().c_str();
-    if(kv.value().is<const char*>()) {
-      std::string name = kv.value().as<std::string>();
+  for (JsonVariant v : root) {
+    if (!v.is<JsonObject>()) continue;
+    JsonObject obj = v.as<JsonObject>();
+    if (obj["uid"].is<const char*>() && obj["name"].is<const char*>()) {
+      std::string uid = obj["uid"].as<std::string>();
+      std::string name = obj["name"].as<std::string>();
       uids.push_back({uid, name});
     }
   }

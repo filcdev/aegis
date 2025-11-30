@@ -20,7 +20,7 @@ public:
   void begin();
   bool saveUIDs();
   bool loadUIDs();
-  void updateFromJSON(JsonObject root);
+  void updateFromJSON(JsonArray root);
   bool isAuthorized(const std::string& uid, std::string &nameOut);
 private:
   const char* uidsFilePath = "/uids.json";

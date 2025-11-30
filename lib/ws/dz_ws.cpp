@@ -10,10 +10,11 @@ DZWSControl wsControl;
 DZWSControl::DZWSControl() {}
 
 void DZWSControl::begin() {
-  if (cfg.ws_addr.length() > 0) {
+  if (cfg.ws_addr.length() > 0 && cfg.ws_port > 0 && cfg.ws_path.length() > 0 && cfg.api_key.length() > 0) {
     webSocket.begin(cfg.ws_addr, cfg.ws_port, cfg.ws_path);
     webSocket.onEvent(webSocketEvent);
     webSocket.setReconnectInterval(RECONNECT_INTERVAL);
+    webSocket.setExtraHeaders(("X-Aegis-Device-Token: " + cfg.api_key).c_str());
   } else {
     state.error.webSocket.hasError = true;
     state.error.webSocket.message = "No WS Config";
@@ -44,7 +45,7 @@ void DZWSControl::sendPing() {
   JsonDocument doc;
   doc["type"] = "ping";
   doc["fwVersion"] = FW_VERSION;
-  doc["uptime"] = millis()/1000;
+  doc["uptime"] = millis();
   doc["ram"] = ESP.getFreeHeap();
   doc["storage"]["total"] = SPIFFS.totalBytes();
   doc["storage"]["used"] = SPIFFS.usedBytes();
@@ -62,11 +63,11 @@ void DZWSControl::sendPing() {
   send(msg);
 }
 
-void DZWSControl::sendCardRead(const std::string& uid, bool granted, bool isButton = false) {
+void DZWSControl::sendCardRead(const std::string& uid, bool authorized, bool isButton) {
   JsonDocument doc;
   doc["type"] = "card-read";
   doc["uid"] = uid;
-  doc["granted"] = granted;
+  doc["authorized"] = authorized;
   doc["isButton"] = isButton;
   String msg;
   serializeJson(doc, msg);
@@ -96,7 +97,6 @@ void DZWSControl::webSocketEvent(WStype_t type, uint8_t * payload, size_t length
     case WStype_DISCONNECTED:
       state.error.webSocket.hasError = true;
       state.error.webSocket.message = "WS Disconn";
-      wsControl.helloMessageSent = false;
       break;
     case WStype_CONNECTED:
       state.error.webSocket.hasError = false;
@@ -118,6 +118,7 @@ void DZWSControl::webSocketEvent(WStype_t type, uint8_t * payload, size_t length
 }
 
 void DZWSControl::handleIncomingMessage(const std::string& message) {
+  Serial.println("WS Msg: " + String(message.c_str()));
   JsonDocument wsDoc;
   DeserializationError error = deserializeJson(wsDoc, message);
   if (error) {
@@ -128,8 +129,8 @@ void DZWSControl::handleIncomingMessage(const std::string& message) {
   if (!type) return;
 
   if (strcmp(type, "sync-database") == 0) {
-    if (wsDoc["db"].is<JsonObject>()) {
-      dbControl.updateFromJSON(wsDoc["db"].as<JsonObject>());
+    if (wsDoc["db"].is<JsonArray>()) {
+      dbControl.updateFromJSON(wsDoc["db"].as<JsonArray>());
     }
   } else if (strcmp(type, "open-door") == 0) {
     state.header = "Welcome >>";
