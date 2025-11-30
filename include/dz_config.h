@@ -3,7 +3,7 @@
 
 #define FW_VERSION "1.0.0"
 
-#define DOOR_PIN (5)
+#define DOOR_PIN (14)
 #define BUZZER_PIN (18) // TODO: Not used yet
 #define BUTTON_PIN (26)
 

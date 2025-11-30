@@ -8,7 +8,6 @@ void DZWIFIControl::begin()
 {
   WiFi.begin(cfg.wifi_ssid.c_str(), cfg.wifi_psk.c_str());
 }
-bool lastDoor = false;
 
 void DZWIFIControl::handle()
 {
