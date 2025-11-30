@@ -1,0 +1,25 @@
+#ifndef DZ_CONFIG_H
+#define DZ_CONFIG_H
+
+#define DOOR_PIN (5)
+#define BUZZER_PIN (18) // TODO: Not used yet
+#define BUTTON_PIN (26)
+
+#define LED_PIN (33)
+#define LED_COUNT (16) //8 inside and 8 outside
+
+// I2C
+#define PN532_ADDRESS (0x48)
+#define I2C_SDA_PIN (21)
+#define I2C_SCL_PIN (22)
+
+#define LCD_ADDRESS (0x27)
+#define LCD_COLUMNS (16)
+#define LCD_ROWS (2)
+
+// PN532 HSU
+#define PN532_HSU_BAUD (115200)
+#define PN532_HSU_RX_PIN (16)
+#define PN532_HSU_TX_PIN (17)
+
+#endif
