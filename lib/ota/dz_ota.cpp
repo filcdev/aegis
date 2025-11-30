@@ -2,6 +2,8 @@
 #include "dz_state.h"
 #include "dz_configMgr.h"
 
+DZOTAControl otaControl;
+
 DZOTAControl::DZOTAControl() {}
 
 void DZOTAControl::begin()

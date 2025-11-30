@@ -12,6 +12,7 @@
 #include "dz_configMgr.h"
 #include "dz_ota.h"
 #include "dz_led.h"
+#include "dz_ws.h"
 
 DZStateControl stateControl;
 DZLCDControl lcd;
@@ -20,7 +21,6 @@ DZWIFIControl wifiControl;
 DZNTPControl ntpControl;
 DZNFCControl nfcControl;
 DZConfigManager ConfigManager;
-DZOTAControl otaControl;
 DZLEDControl ledControl;
 
 void setup() {
@@ -34,6 +34,7 @@ void setup() {
   button.begin();
   ConfigManager.begin();
   wifiControl.begin();
+  wsControl.begin();
   ntpControl.setup();
   nfcControl.begin();
   dbControl.begin();
@@ -48,6 +49,7 @@ void NetworkTask(void *pvParameters) {
   (void) pvParameters;
   for (;;) {
     wifiControl.handle();
+    wsControl.handle();
     ntpControl.handle();
     otaControl.handle();
     vTaskDelay(pdMS_TO_TICKS(100));

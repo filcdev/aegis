@@ -9,10 +9,10 @@ struct DeviceConfig {
   String api_key = "";
   String wifi_ssid = "";
   String wifi_psk = "";
-  String mqtt_addr = "";
-  String mqtt_user = "";
-  String mqtt_psk = "";
-  uint16_t mqtt_port = 1883;
+  String ws_addr = "";
+  uint16_t ws_port = 443;
+  String ws_path = "/";
+  String ota_url = "";
   String cert = "";
 };
 

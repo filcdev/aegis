@@ -1,5 +1,7 @@
 #include "dz_nfc.h"
 #include "dz_state.h"
+#include "dz_ws.h"
+#include <ArduinoJson.h>
 #include <string>
 
 DZNFCControl::DZNFCControl() {}
@@ -56,7 +58,8 @@ void DZNFCControl::handle()
       uidStr += buf;
     }
     std::string name;
-    if (dbControl.isAuthorized(uidStr, name)) {
+    bool authorized = dbControl.isAuthorized(uidStr, name);
+    if (authorized) {
       state.header = "Welcome >>";
       state.message = name;
       state.doorOpen = true;
@@ -64,5 +67,15 @@ void DZNFCControl::handle()
     } else {
       state.message = "Access Denied";
     }
+
+    JsonDocument doc;
+    doc["type"] = "card-read";
+    doc["uid"] = uidStr;
+    doc["authorized"] = authorized;
+    doc["name"] = name;
+    
+    String msg;
+    serializeJson(doc, msg);
+    wsControl.send(msg);
   }
 }

@@ -95,3 +95,16 @@ bool DZDBControl::loadUIDs()
   state.error.db.message = "";
   return true;
 }
+
+void DZDBControl::updateFromJSON(JsonObject root)
+{
+  uids.clear();
+  for (JsonPair kv : root) {
+    std::string uid = kv.key().c_str();
+    JsonArray arr = kv.value().as<JsonArray>();
+    if (arr.size() >= 2) {
+        uids.push_back({uid, arr[0].as<std::string>(), arr[1].as<bool>()});
+    }
+  }
+  saveUIDs();
+}

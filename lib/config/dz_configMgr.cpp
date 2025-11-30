@@ -86,10 +86,10 @@ void DZConfigManager::parseConfigFile() {
   if (doc["api_key"]) cfg.api_key = doc["api_key"].as<String>();
   if (doc["wifi_ssid"]) cfg.wifi_ssid = doc["wifi_ssid"].as<String>();
   if (doc["wifi_psk"]) cfg.wifi_psk = doc["wifi_psk"].as<String>();
-  if (doc["mqtt_addr"]) cfg.mqtt_addr = doc["mqtt_addr"].as<String>();
-  if (doc["mqtt_port"]) cfg.mqtt_port = doc["mqtt_port"].as<uint16_t>();
-  if (doc["mqtt_user"]) cfg.mqtt_user = doc["mqtt_user"].as<String>();
-  if (doc["mqtt_psk"]) cfg.mqtt_psk = doc["mqtt_psk"].as<String>();
+  if (doc["ws_addr"]) cfg.ws_addr = doc["ws_addr"].as<String>();
+  if (doc["ws_port"]) cfg.ws_port = doc["ws_port"].as<uint16_t>();
+  if (doc["ws_path"]) cfg.ws_path = doc["ws_path"].as<String>();
+  if (doc["ota_url"]) cfg.ota_url = doc["ota_url"].as<String>();
   if (doc["cert"]) cfg.cert = doc["cert"].as<String>();
 
   state.error.sd.hasError = false;

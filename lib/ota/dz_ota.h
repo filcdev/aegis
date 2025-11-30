@@ -12,4 +12,6 @@ public:
     void startUpdate(const char* url);
 };
 
+extern DZOTAControl otaControl;
+
 #endif
