@@ -46,19 +46,26 @@ void DZWSControl::sendPing() {
   
   JsonDocument doc;
   doc["type"] = "ping";
-  doc["data"]["fwVersion"] = FW_VERSION;
-  doc["data"]["uptime"] = millis();
-  doc["data"]["ram"] = ESP.getFreeHeap();
-  doc["data"]["storage"]["total"] = SPIFFS.totalBytes();
-  doc["data"]["storage"]["used"] = SPIFFS.usedBytes();
-  
-  doc["data"]["debug"]["deviceState"] = state.deviceState;
-  doc["data"]["debug"]["lastResetReason"] = getResetReason();
-  doc["data"]["debug"]["errors"]["nfc"] = state.error.nfc.hasError;
-  doc["data"]["debug"]["errors"]["sd"] = state.error.sd.hasError;
-  doc["data"]["debug"]["errors"]["wifi"] = state.error.wifi.hasError;
-  doc["data"]["debug"]["errors"]["db"] = state.error.db.hasError;
-  doc["data"]["debug"]["errors"]["ota"] = state.error.ota.hasError;
+
+  JsonObject data = doc["data"].to<JsonObject>();
+  data["fwVersion"] = FW_VERSION;
+  data["uptime"] = millis();
+  data["ramFree"] = ESP.getFreeHeap();
+
+  JsonObject storage = data["storage"].to<JsonObject>();
+  storage["total"] = SPIFFS.totalBytes();
+  storage["used"] = SPIFFS.usedBytes();
+
+  JsonObject debug = data["debug"].to<JsonObject>();
+  debug["deviceState"] = state.deviceState;
+  debug["lastResetReason"] = getResetReason();
+
+  JsonObject errors = debug["errors"].to<JsonObject>();
+  errors["nfc"] = state.error.nfc.hasError;
+  errors["sd"] = state.error.sd.hasError;
+  errors["wifi"] = state.error.wifi.hasError;
+  errors["db"] = state.error.db.hasError;
+  errors["ota"] = state.error.ota.hasError;
 
   String msg;
   serializeJson(doc, msg);
