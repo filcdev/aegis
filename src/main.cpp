@@ -13,6 +13,9 @@
 #include "dz_ota.h"
 #include "dz_led.h"
 #include "dz_ws.h"
+#include "dz_logger.h"
+
+static Logger logger("MAIN");
 
 DZStateControl stateControl;
 DZLCDControl lcd;
@@ -24,7 +27,9 @@ DZConfigManager ConfigManager;
 DZLEDControl ledControl;
 
 void setup() {
+  if(!loggerMutex) loggerMutex = xSemaphoreCreateMutex();
   Serial.begin(115200);
+  logger.info("Starting setup...");
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(DOOR_PIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -39,7 +44,7 @@ void setup() {
   nfcControl.begin();
   dbControl.begin();
   otaControl.begin();
-  Serial.println("Setup complete");
+  logger.info("Setup complete");
   digitalWrite(LED_BUILTIN, LOW);
   lcd.clear();
   lcd.printLn("Aegis");

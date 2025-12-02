@@ -3,6 +3,7 @@
 
 #include <WiFi.h>
 #include "time.h"
+#include "dz_logger.h"
 
 #define NTP_SERVER "pool.ntp.org"
 #define GMT_OFFSET_SEC 3600
@@ -17,6 +18,7 @@ public:
     std::string getFormattedTime();
 
 private:
+    Logger logger;
     unsigned long lastSyncAttempt;
 };
 

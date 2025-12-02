@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "dz_logger.h"
 
 struct DeviceConfig {
   String hostname = "DokZar-ESP32";
@@ -18,9 +19,11 @@ struct DeviceConfig {
 
 class DZConfigManager {
 public:
+  DZConfigManager();
   void begin();
 
 private:
+  Logger logger;
   void parseConfigFile();
   bool copyFile(const char* srcPath, const char* dstPath);
   void checkSDUpdates();

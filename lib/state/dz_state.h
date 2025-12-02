@@ -2,6 +2,7 @@
 #define DZ_STATE_H
 
 #include <string>
+#include "dz_logger.h"
 
 enum DeviceState
 {
@@ -57,8 +58,10 @@ extern GlobalState state;
 class DZStateControl
 {
 public:
+  DZStateControl();
   void handle();
 private:
+  Logger logger;
   unsigned long messageTmr = 0;
   std::string lastMessage = "";
 };

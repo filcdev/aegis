@@ -4,10 +4,11 @@
 #include <ArduinoJson.h>
 #include <string>
 
-DZNFCControl::DZNFCControl() {}
+DZNFCControl::DZNFCControl() : logger("NFC") {}
 
 void DZNFCControl::begin()
 {
+  logger.info("Initializing NFC");
   Serial1.begin(PN532_HSU_BAUD, SERIAL_8N1, PN532_HSU_RX_PIN, PN532_HSU_TX_PIN);
   delay(10);
 
@@ -20,11 +21,13 @@ void DZNFCControl::begin()
   }
 
   if (!versiondata) {
+    logger.error("PN532 not found");
     state.error.nfc.hasError = true;
     state.error.nfc.message = "PN532 Disconn";
     return;
   }
 
+  logger.info("PN532 Found. Firmware version: %x", versiondata);
   nfc.SAMConfig();
   nfc.setPassiveActivationRetries(0x01);
   state.error.nfc.hasError = false;
@@ -37,9 +40,11 @@ void DZNFCControl::handle()
     lastHealthCheck = now;
     uint32_t versiondata = nfc.getFirmwareVersion();
     if (!versiondata) {
+      if (!state.error.nfc.hasError) logger.error("PN532 Disconnected");
       state.error.nfc.hasError = true;
       state.error.nfc.message = "PN532 Disconn";
     } else {
+      if (state.error.nfc.hasError) logger.info("PN532 Reconnected");
       state.error.nfc.hasError = false;
       state.error.nfc.message = "";
     }
@@ -57,14 +62,17 @@ void DZNFCControl::handle()
       snprintf(buf, sizeof(buf), "%02X", uid[i]);
       uidStr += buf;
     }
+    logger.info("Card detected: %s", uidStr.c_str());
     std::string name;
     bool authorized = dbControl.isAuthorized(uidStr, name);
     if (authorized) {
+      logger.info("Access Granted: %s", name.c_str());
       state.header = "Welcome >>";
       state.message = name;
       state.doorOpen = true;
       state.doorOpenTmr = now;
     } else {
+      logger.info("Access Denied");
       state.message = "Access Denied";
     }
     wsControl.sendCardRead(uidStr, authorized, false);

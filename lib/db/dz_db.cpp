@@ -3,11 +3,13 @@
 
 DZDBControl dbControl;
 
-DZDBControl::DZDBControl() {}
+DZDBControl::DZDBControl() : logger("DB") {}
 
 void DZDBControl::begin()
 {
+  logger.info("Initializing DB");
   if (!SPIFFS.begin(true)) {
+    logger.error("SPIFFS mount failed");
     state.error.db.hasError = true;
     state.error.db.message = "SPIFFS mount";
     return;
@@ -17,8 +19,10 @@ void DZDBControl::begin()
 
 bool DZDBControl::saveUIDs()
 {
+  logger.info("Saving UIDs to file");
   File file = SPIFFS.open(uidsFilePath, FILE_WRITE);
   if (!file) {
+    logger.error("Failed to open UIDs file for writing");
     state.error.db.hasError = true;
     state.error.db.message = "UID Save Fail";
     return false;
@@ -30,12 +34,14 @@ bool DZDBControl::saveUIDs()
   }
 
   if (serializeJson(doc, file) == 0) {
+    logger.error("Failed to serialize UIDs");
     state.error.db.hasError = true;
     state.error.db.message = "UID Save Fail";
     file.close();
     return false;
   }
   
+  logger.info("UIDs saved successfully");
   state.error.db.hasError = false;
   state.error.db.message = "";
   file.close();
@@ -55,13 +61,16 @@ bool DZDBControl::isAuthorized(const std::string& uid, std::string &nameOut)
 
 bool DZDBControl::loadUIDs()
 {
+  logger.info("Loading UIDs from file");
   if (!SPIFFS.exists(uidsFilePath)) {
+    logger.info("UIDs file not found, creating new one");
     return saveUIDs();
   }
   uids.clear();
 
   File file = SPIFFS.open(uidsFilePath, FILE_READ);
   if (!file) {
+    logger.error("Failed to open UIDs file for reading");
     state.error.db.hasError = true;
     state.error.db.message = "UID File Fail";
     return false;
@@ -72,6 +81,7 @@ bool DZDBControl::loadUIDs()
   file.close();
 
   if (error) {
+    logger.error("Failed to parse UIDs file: %s", error.c_str());
     state.error.db.hasError = true;
     state.error.db.message = "UID Load Fail";
     return false;
@@ -87,6 +97,7 @@ bool DZDBControl::loadUIDs()
     }
   }
 
+  logger.info("Loaded %d UIDs", uids.size());
   state.error.db.hasError = false;
   state.error.db.message = "";
   return true;
@@ -94,6 +105,7 @@ bool DZDBControl::loadUIDs()
 
 void DZDBControl::updateFromJSON(JsonArray root)
 {
+  logger.info("Updating UIDs from JSON");
   uids.clear();
   for (JsonVariant v : root) {
     if (!v.is<JsonObject>()) continue;
