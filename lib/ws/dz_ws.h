@@ -5,6 +5,20 @@
 #include <Arduino.h>
 #include "dz_db.h"
 #include "dz_logger.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+
+enum WSEventType {
+  WS_EVT_CARD_READ
+};
+
+struct WSEvent {
+  WSEventType type;
+  char uid[32];
+  bool authorized;
+  bool isButton;
+  time_t timestamp;
+};
 
 class DZWSControl {
 public:
@@ -17,13 +31,12 @@ public:
 
 private:
   WebSocketsClient webSocket;
+  QueueHandle_t _wsQueue;
   static void webSocketEvent(WStype_t type, uint8_t * payload, size_t length);
   static void handleIncomingMessage(const std::string& message);
   static String getResetReason();
-  
   void sendPing();
 
-  bool helloMessageSent = false;
   unsigned long lastPingTime = 0;
   
   static const unsigned long PING_INTERVAL = 60000;

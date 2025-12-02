@@ -2,8 +2,26 @@
 #include "dz_state.h"
 
 GlobalState state;
+DZStateControl stateControl;
 
 DZStateControl::DZStateControl() : logger("STAT") {}
+
+void DZStateControl::begin() {
+  doorTimer = xTimerCreate("DoorTimer", pdMS_TO_TICKS(5000), pdFALSE, (void*)this, doorTimerCallback);
+}
+
+void DZStateControl::openDoor() {
+  state.doorOpen = true;
+  if (doorTimer != NULL) {
+    xTimerReset(doorTimer, 0);
+  }
+}
+
+void DZStateControl::doorTimerCallback(TimerHandle_t xTimer) {
+  DZStateControl* instance = (DZStateControl*) pvTimerGetTimerID(xTimer);
+  instance->logger.info("Closing door");
+  state.doorOpen = false;
+}
 
 void DZStateControl::handle()
 {
@@ -29,14 +47,6 @@ void DZStateControl::handle()
     }
   }
   digitalWrite(LED_BUILTIN, state.doorOpen ? HIGH : LOW);
-  if(state.doorOpen) {
-    if(state.doorOpenTmr == 0) state.doorOpenTmr = millis();
-    if(millis() - state.doorOpenTmr > 5000) {
-      logger.info("Closing door");
-      state.doorOpen = false;
-      state.doorOpenTmr = 0;
-    }
-  }
   if(state.message != "") {
     if(lastMessage != state.message) {
       lastMessage = state.message;

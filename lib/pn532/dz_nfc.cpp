@@ -69,8 +69,7 @@ void DZNFCControl::handle()
       logger.info("Access Granted: %s", name.c_str());
       state.header = "Welcome >>";
       state.message = name;
-      state.doorOpen = true;
-      state.doorOpenTmr = now;
+      stateControl.openDoor();
     } else {
       logger.info("Access Denied");
       state.message = "Access Denied";

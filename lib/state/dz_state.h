@@ -3,6 +3,8 @@
 
 #include <string>
 #include "dz_logger.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/timers.h"
 
 enum DeviceState
 {
@@ -59,11 +61,17 @@ class DZStateControl
 {
 public:
   DZStateControl();
+  void begin();
   void handle();
+  void openDoor();
 private:
   Logger logger;
   unsigned long messageTmr = 0;
   std::string lastMessage = "";
+  TimerHandle_t doorTimer = NULL;
+  static void doorTimerCallback(TimerHandle_t xTimer);
 };
+
+extern DZStateControl stateControl;
 
 #endif

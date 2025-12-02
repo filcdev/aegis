@@ -17,7 +17,6 @@
 
 static Logger logger("MAIN");
 
-DZStateControl stateControl;
 DZLCDControl lcd;
 DZButton button;
 DZWIFIControl wifiControl;
@@ -37,6 +36,7 @@ void setup() {
   lcd.begin();
   ledControl.begin();
   button.begin();
+  stateControl.begin();
   ConfigManager.begin();
   wifiControl.begin();
   wsControl.begin();

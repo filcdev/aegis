@@ -11,6 +11,7 @@ DZWSControl::DZWSControl() : logger("WS") {}
 
 void DZWSControl::begin() {
   logger.info("Initializing WebSocket");
+  _wsQueue = xQueueCreate(10, sizeof(WSEvent));
   if (cfg.ws_addr.length() > 0 && cfg.ws_port > 0 && cfg.ws_path.length() > 0 && cfg.api_key.length() > 0) {
     webSocket.begin(cfg.ws_addr, cfg.ws_port, cfg.ws_path);
     webSocket.onEvent(webSocketEvent);
@@ -28,6 +29,22 @@ void DZWSControl::handle() {
     return;
   }
   webSocket.loop();
+
+  if (_wsQueue != NULL) {
+    WSEvent event;
+    while (xQueueReceive(_wsQueue, &event, 0) == pdTRUE) {
+      if (event.type == WS_EVT_CARD_READ) {
+        JsonDocument doc;
+        doc["type"] = "card-read";
+        doc["uid"] = event.uid;
+        doc["authorized"] = event.authorized;
+        doc["isButton"] = event.isButton;
+        String msg;
+        serializeJson(doc, msg);
+        send(msg);
+      }
+    }
+  }
 
   if (!state.error.webSocket.hasError && millis() - lastPingTime > PING_INTERVAL) {
     sendPing();
@@ -73,14 +90,16 @@ void DZWSControl::sendPing() {
 }
 
 void DZWSControl::sendCardRead(const std::string& uid, bool authorized, bool isButton) {
-  JsonDocument doc;
-  doc["type"] = "card-read";
-  doc["uid"] = uid;
-  doc["authorized"] = authorized;
-  doc["isButton"] = isButton;
-  String msg;
-  serializeJson(doc, msg);
-  send(msg);
+  if (_wsQueue != NULL) {
+    WSEvent event;
+    event.type = WS_EVT_CARD_READ;
+    strncpy(event.uid, uid.c_str(), sizeof(event.uid) - 1);
+    event.uid[sizeof(event.uid) - 1] = '\0';
+    event.authorized = authorized;
+    event.isButton = isButton;
+    event.timestamp = time(nullptr);
+    xQueueSend(_wsQueue, &event, portMAX_DELAY);
+  }
 }
 
 String DZWSControl::getResetReason() {
