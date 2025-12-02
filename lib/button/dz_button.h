@@ -1,6 +1,8 @@
 #ifndef DZ_BUTTON_H
 #define DZ_BUTTON_H
 
+#include "dz_logger.h"
+
 class DZButton
 {
 public:
@@ -8,6 +10,7 @@ public:
   void begin();
   void handle();
 private:
+  Logger logger;
   unsigned long lastDebounceTime = 0;
 };
 

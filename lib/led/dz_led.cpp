@@ -1,7 +1,7 @@
 #include "dz_led.h"
 #include "dz_state.h"
 
-DZLEDControl::DZLEDControl() : pixels(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800) {}
+DZLEDControl::DZLEDControl() : pixels(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800), logger("LED") {}
 
 void DZLEDControl::testSequence() {
   pixels.fill(pixels.Color(255, 0, 0));
@@ -19,6 +19,7 @@ void DZLEDControl::testSequence() {
 
 void DZLEDControl::begin()
 {
+  logger.info("Initializing LED");
   pixels.begin();
   pixels.clear();
   pixels.show();

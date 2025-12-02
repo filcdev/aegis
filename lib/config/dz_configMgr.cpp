@@ -7,16 +7,23 @@
 
 DeviceConfig cfg;
 
+DZConfigManager::DZConfigManager() : logger("CFG") {}
+
 void DZConfigManager::begin() {
+  logger.info("Initializing Config Manager");
   if (!SPIFFS.begin(true)) {
+    logger.error("SPIFFS Mount Failed");
     state.error.sd.hasError = true;
     state.error.sd.message = "SPIFFS Init";
     return;
   }
 
   if (SD.begin(5)) {
+    logger.info("SD Card detected, checking for updates");
     checkSDUpdates();
     SD.end();
+  } else {
+    logger.info("No SD Card detected");
   }
   
   parseConfigFile();
@@ -24,6 +31,7 @@ void DZConfigManager::begin() {
 
 void DZConfigManager::checkSDUpdates() {
   if (SD.exists("/config.new.json")) {
+    logger.info("Found config.new.json, updating config");
     if (copyFile("/config.new.json", "/config.json")) {
       SD.remove("/config.json");
       SD.rename("/config.new.json", "/config.json");
@@ -31,6 +39,7 @@ void DZConfigManager::checkSDUpdates() {
   }
   
   if (SD.exists("/uids.json")) {
+    logger.info("Found uids.json, updating uids");
     if (copyFile("/uids.json", "/uids.json")) {
       SD.remove("/uids.json");
     }
@@ -59,7 +68,9 @@ bool DZConfigManager::copyFile(const char* srcPath, const char* dstPath) {
 }
 
 void DZConfigManager::parseConfigFile() {
+  logger.info("Parsing config file");
   if (!SPIFFS.exists("/config.json")) {
+    logger.error("Config file missing");
     state.error.sd.hasError = true;
     state.error.sd.message = "Cfg Miss";
     return;
@@ -67,6 +78,7 @@ void DZConfigManager::parseConfigFile() {
 
   File f = SPIFFS.open("/config.json", FILE_READ);
   if (!f) {
+    logger.error("Failed to open config file");
     state.error.sd.hasError = true;
     state.error.sd.message = "Cfg Open";
     return;
@@ -77,6 +89,7 @@ void DZConfigManager::parseConfigFile() {
   f.close();
 
   if (err) {
+    logger.error("Config Parse Error: %s", err.c_str());
     state.error.sd.hasError = true;
     state.error.sd.message = "Cfg Parse";
     return;
@@ -92,6 +105,7 @@ void DZConfigManager::parseConfigFile() {
   if (doc["ota_url"]) cfg.ota_url = doc["ota_url"].as<String>();
   if (doc["cert"]) cfg.cert = doc["cert"].as<String>();
 
+  logger.info("Config loaded successfully");
   state.error.sd.hasError = false;
   state.error.sd.message = "";
 }

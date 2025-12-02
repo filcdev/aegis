@@ -2,12 +2,13 @@
 #include "dz_state.h"
 #include <Arduino.h>
 
-DZNTPControl::DZNTPControl() : lastSyncAttempt(0) {}
+DZNTPControl::DZNTPControl() : lastSyncAttempt(0), logger("NTP") {}
 
 bool isTimeSet = false;
 static const int TIME_RETRY_INTERVAL = 5000;
 
 void DZNTPControl::setup() {
+    logger.info("Configuring NTP");
     configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
 }
 
@@ -18,9 +19,13 @@ void DZNTPControl::handle() {
         lastSyncAttempt = currentMillis;
         struct tm timeinfo;
         if (!getLocalTime(&timeinfo, 100)) {
+            logger.error("Failed to obtain time");
             return;
         } else {
-            isTimeSet = true;
+            if (!isTimeSet) {
+                logger.info("Time synchronized");
+                isTimeSet = true;
+            }
         }
     }
     std::string formatted = getFormattedTime();

@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
+#include "dz_logger.h"
 
 #include <vector>
 #include <string>
@@ -23,6 +24,7 @@ public:
   void updateFromJSON(JsonArray root);
   bool isAuthorized(const std::string& uid, std::string &nameOut);
 private:
+  Logger logger;
   const char* uidsFilePath = "/uids.json";
   std::vector<UidEntry> uids;
 };

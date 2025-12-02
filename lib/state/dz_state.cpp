@@ -3,6 +3,8 @@
 
 GlobalState state;
 
+DZStateControl::DZStateControl() : logger("STAT") {}
+
 void DZStateControl::handle()
 {
   if(state.deviceState != DEVICE_STATE_UPDATING){
@@ -14,14 +16,23 @@ void DZStateControl::handle()
       state.error.db.hasError ||
       state.error.ota.hasError
     ) {
+      if (state.deviceState != DEVICE_STATE_ERROR) {
+        logger.error("Entering ERROR state");
+      }
       state.deviceState = DEVICE_STATE_ERROR;
     }
-    else state.deviceState = DEVICE_STATE_IDLE;
+    else {
+      if (state.deviceState == DEVICE_STATE_ERROR) {
+        logger.info("Errors cleared, entering IDLE state");
+      }
+      state.deviceState = DEVICE_STATE_IDLE;
+    }
   }
   digitalWrite(LED_BUILTIN, state.doorOpen ? HIGH : LOW);
   if(state.doorOpen) {
     if(state.doorOpenTmr == 0) state.doorOpenTmr = millis();
     if(millis() - state.doorOpenTmr > 5000) {
+      logger.info("Closing door");
       state.doorOpen = false;
       state.doorOpenTmr = 0;
     }

@@ -2,6 +2,7 @@
 #define DZ_LED_H
 #include <Adafruit_NeoPixel.h>
 #include "dz_config.h"
+#include "dz_logger.h"
 
 class DZLEDControl
 {
@@ -10,6 +11,7 @@ public:
     void begin();
     void handle();
 private:
+    Logger logger;
     Adafruit_NeoPixel pixels;
     void testSequence();
 
