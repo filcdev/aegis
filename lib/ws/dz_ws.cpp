@@ -44,19 +44,19 @@ void DZWSControl::sendPing() {
   
   JsonDocument doc;
   doc["type"] = "ping";
-  doc["fwVersion"] = FW_VERSION;
-  doc["uptime"] = millis();
-  doc["ram"] = ESP.getFreeHeap();
-  doc["storage"]["total"] = SPIFFS.totalBytes();
-  doc["storage"]["used"] = SPIFFS.usedBytes();
+  doc["data"]["fwVersion"] = FW_VERSION;
+  doc["data"]["uptime"] = millis();
+  doc["data"]["ram"] = ESP.getFreeHeap();
+  doc["data"]["storage"]["total"] = SPIFFS.totalBytes();
+  doc["data"]["storage"]["used"] = SPIFFS.usedBytes();
   
-  doc["debug"]["deviceState"] = state.deviceState;
-  doc["debug"]["lastResetReason"] = getResetReason();
-  doc["debug"]["errors"]["nfc"] = state.error.nfc.hasError;
-  doc["debug"]["errors"]["sd"] = state.error.sd.hasError;
-  doc["debug"]["errors"]["wifi"] = state.error.wifi.hasError;
-  doc["debug"]["errors"]["db"] = state.error.db.hasError;
-  doc["debug"]["errors"]["ota"] = state.error.ota.hasError;
+  doc["data"]["debug"]["deviceState"] = state.deviceState;
+  doc["data"]["debug"]["lastResetReason"] = getResetReason();
+  doc["data"]["debug"]["errors"]["nfc"] = state.error.nfc.hasError;
+  doc["data"]["debug"]["errors"]["sd"] = state.error.sd.hasError;
+  doc["data"]["debug"]["errors"]["wifi"] = state.error.wifi.hasError;
+  doc["data"]["debug"]["errors"]["db"] = state.error.db.hasError;
+  doc["data"]["debug"]["errors"]["ota"] = state.error.ota.hasError;
 
   String msg;
   serializeJson(doc, msg);
