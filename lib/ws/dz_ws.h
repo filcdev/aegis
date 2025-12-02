@@ -4,6 +4,7 @@
 #include <WebSocketsClient.h>
 #include <Arduino.h>
 #include "dz_db.h"
+#include "dz_logger.h"
 
 class DZWSControl {
 public:
@@ -12,6 +13,7 @@ public:
   void handle();
   void send(String message);
   void sendCardRead(const std::string& uid, bool granted, bool isButton = false);
+  Logger logger;
 
 private:
   WebSocketsClient webSocket;

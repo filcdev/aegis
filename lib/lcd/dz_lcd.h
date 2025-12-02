@@ -4,6 +4,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <string>
 #include "dz_state.h"
+#include "dz_logger.h"
 
 class DZLCDControl
 {
@@ -18,6 +19,7 @@ public:
   }
 
 private:
+  Logger logger;
   bool isUpdateNeeded();
   void updateHeader();
   void manageBacklight();

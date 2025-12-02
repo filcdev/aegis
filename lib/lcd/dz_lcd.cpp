@@ -5,10 +5,11 @@
 #include "dz_config.h"
 #include <Arduino.h>
 
-DZLCDControl::DZLCDControl() : lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS) {}
+DZLCDControl::DZLCDControl() : lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS), logger("LCD") {}
 
 void DZLCDControl::begin()
 {
+  logger.info("Initializing LCD");
   lcd.init();
   lcd.backlight();
   handle();

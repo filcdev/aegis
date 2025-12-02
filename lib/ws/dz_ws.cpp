@@ -7,15 +7,17 @@
 
 DZWSControl wsControl;
 
-DZWSControl::DZWSControl() {}
+DZWSControl::DZWSControl() : logger("WS") {}
 
 void DZWSControl::begin() {
+  logger.info("Initializing WebSocket");
   if (cfg.ws_addr.length() > 0 && cfg.ws_port > 0 && cfg.ws_path.length() > 0 && cfg.api_key.length() > 0) {
     webSocket.begin(cfg.ws_addr, cfg.ws_port, cfg.ws_path);
     webSocket.onEvent(webSocketEvent);
     webSocket.setReconnectInterval(RECONNECT_INTERVAL);
     webSocket.setExtraHeaders(("X-Aegis-Device-Token: " + cfg.api_key).c_str());
   } else {
+    logger.error("WebSocket configuration missing");
     state.error.webSocket.hasError = true;
     state.error.webSocket.message = "No WS Config";
   }
@@ -95,19 +97,23 @@ String DZWSControl::getResetReason() {
 void DZWSControl::webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
+      wsControl.logger.error("WebSocket Disconnected");
       state.error.webSocket.hasError = true;
       state.error.webSocket.message = "WS Disconn";
       break;
     case WStype_CONNECTED:
+      wsControl.logger.info("WebSocket Connected");
       state.error.webSocket.hasError = false;
       state.error.webSocket.message = "";
       break;
     case WStype_TEXT:
+      wsControl.logger.info("WebSocket Message Received: %s", payload);
       handleIncomingMessage(std::string((char*)payload, length));
       break;
     case WStype_BIN:
       break;
     case WStype_ERROR:
+      wsControl.logger.error("WebSocket Error");
       state.error.webSocket.hasError = true;
       state.error.webSocket.message = "WS Error";
       break;
@@ -118,21 +124,25 @@ void DZWSControl::webSocketEvent(WStype_t type, uint8_t * payload, size_t length
 }
 
 void DZWSControl::handleIncomingMessage(const std::string& message) {
-  Serial.println("WS Msg: " + String(message.c_str()));
   JsonDocument wsDoc;
   DeserializationError error = deserializeJson(wsDoc, message);
   if (error) {
+    wsControl.logger.error("Failed to parse WebSocket message");
     return;
   }
   
   const char* type = wsDoc["type"];
   if (!type) return;
 
+  wsControl.logger.info("Processing message type: %s", type);
+
   if (strcmp(type, "sync-database") == 0) {
+    wsControl.logger.info("Syncing database");
     if (wsDoc["db"].is<JsonArray>()) {
       dbControl.updateFromJSON(wsDoc["db"].as<JsonArray>());
     }
   } else if (strcmp(type, "open-door") == 0) {
+    wsControl.logger.info("Remote open door request");
     state.header = "Welcome >>";
     state.doorOpen = true;
     state.doorOpenTmr = millis();
@@ -142,6 +152,7 @@ void DZWSControl::handleIncomingMessage(const std::string& message) {
       state.message = "WebUser";
     }
   } else if (strcmp(type, "update") == 0) {
+    wsControl.logger.info("Remote update request");
     if (wsDoc["url"].is<const char*>())
     {
       otaControl.startUpdate(wsDoc["url"].as<const char*>());
