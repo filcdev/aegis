@@ -20,11 +20,11 @@ public:
 
 private:
   Logger logger;
-  bool isUpdateNeeded();
-  void updateHeader();
+  bool isUpdateNeeded(const GlobalState& currentState);
+  void updateHeader(const GlobalState& currentState);
   void manageBacklight();
-  void displayCurrentState();
-  void cycleErrors();
+  void displayCurrentState(const GlobalState& currentState);
+  void cycleErrors(const GlobalState& currentState);
 
   LiquidCrystal_I2C lcd;
   GlobalState lastState;

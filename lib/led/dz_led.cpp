@@ -155,8 +155,8 @@ void DZLEDControl::handle()
   if (dt == 0) return;
   lastMillis = now;
 
-  bool isError = (state.deviceState == DEVICE_STATE_ERROR);
-  bool isDoor = state.doorOpen;
+  bool isError = (stateControl.getDeviceState() == DEVICE_STATE_ERROR);
+  bool isDoor = stateControl.isDoorOpen();
 
   if (isError) {
     handleErrorState(now);
@@ -171,7 +171,7 @@ void DZLEDControl::handle()
     doorSeqState = 0;
   }
 
-  if (state.deviceState == DEVICE_STATE_IDLE) {
+  if (stateControl.getDeviceState() == DEVICE_STATE_IDLE) {
     handleIdleState(dt);
     return;
   }

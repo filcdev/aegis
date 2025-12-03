@@ -13,16 +13,14 @@ void DZWIFIControl::begin()
 void DZWIFIControl::handle()
 {
   if (WiFi.status() != WL_CONNECTED) {
-    if(state.error.wifi.hasError == false) {
+    if(!stateControl.hasError(ErrorSource::WIFI)) {
       logger.error("WiFi Disconnected");
-      state.error.wifi.hasError = true;
-      state.error.wifi.message = "WiFi Disconn";
+      stateControl.setError(ErrorSource::WIFI, true, "WiFi Disconn");
     }
   } else {
-    if(state.error.wifi.hasError == true) {
+    if(stateControl.hasError(ErrorSource::WIFI)) {
       logger.info("WiFi Reconnected");
-      state.error.wifi.hasError = false;
-      state.error.wifi.message = "";
+      stateControl.setError(ErrorSource::WIFI, false);
     }
   }
 }

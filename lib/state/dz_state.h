@@ -2,9 +2,11 @@
 #define DZ_STATE_H
 
 #include <string>
+#include <array>
 #include "dz_logger.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
+#include "freertos/semphr.h"
 
 enum DeviceState
 {
@@ -14,13 +16,21 @@ enum DeviceState
   DEVICE_STATE_UPDATING = 3
 };
 
+enum class ErrorSource {
+  NFC,
+  CFG,
+  WIFI,
+  WEBSOCKET,
+  DB,
+  OTA,
+  COUNT
+};
+
 struct ErrorEntry
 {
   bool hasError = false;
   std::string message = "";
 };
-
-#include <array>
 
 struct Errors
 {
@@ -55,8 +65,6 @@ struct GlobalState
   std::string time = "--:--";
 };
 
-extern GlobalState state;
-
 class DZStateControl
 {
 public:
@@ -64,8 +72,32 @@ public:
   void begin();
   void handle();
   void openDoor();
+
+  void setError(ErrorSource source, bool hasError, const std::string& message = "");
+  bool hasError(ErrorSource source);
+  
+  void setDeviceState(DeviceState newState);
+  DeviceState getDeviceState();
+  
+  void setMessage(const std::string& message);
+  std::string getMessage();
+  
+  void setHeader(const std::string& header);
+  std::string getHeader();
+  
+  void setTime(const std::string& time);
+  std::string getTime();
+  
+  bool isDoorOpen();
+  
+  Errors getErrors();
+  GlobalState getSnapshot();
+
 private:
   Logger logger;
+  GlobalState _state;
+  SemaphoreHandle_t _mutex;
+
   unsigned long messageTmr = 0;
   std::string lastMessage = "";
   TimerHandle_t doorTimer = NULL;

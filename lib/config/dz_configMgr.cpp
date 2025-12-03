@@ -13,8 +13,7 @@ void DZConfigManager::begin() {
   logger.info("Initializing Config Manager");
   if (!SPIFFS.begin(true)) {
     logger.error("SPIFFS Mount Failed");
-    state.error.sd.hasError = true;
-    state.error.sd.message = "SPIFFS Init";
+    stateControl.setError(ErrorSource::CFG, true, "SPIFFS Init");
     return;
   }
 
@@ -71,16 +70,14 @@ void DZConfigManager::parseConfigFile() {
   logger.info("Parsing config file");
   if (!SPIFFS.exists("/config.json")) {
     logger.error("Config file missing");
-    state.error.sd.hasError = true;
-    state.error.sd.message = "Cfg Miss";
+    stateControl.setError(ErrorSource::CFG, true, "Cfg Miss");
     return;
   }
 
   File f = SPIFFS.open("/config.json", FILE_READ);
   if (!f) {
     logger.error("Failed to open config file");
-    state.error.sd.hasError = true;
-    state.error.sd.message = "Cfg Open";
+    stateControl.setError(ErrorSource::CFG, true, "Cfg Open");
     return;
   }
 
@@ -90,8 +87,7 @@ void DZConfigManager::parseConfigFile() {
 
   if (err) {
     logger.error("Config Parse Error: %s", err.c_str());
-    state.error.sd.hasError = true;
-    state.error.sd.message = "Cfg Parse";
+    stateControl.setError(ErrorSource::CFG, true, "Cfg Parse");
     return;
   }
   
@@ -106,8 +102,7 @@ void DZConfigManager::parseConfigFile() {
   if (doc["cert"]) cfg.cert = doc["cert"].as<String>();
 
   logger.info("Config loaded successfully");
-  state.error.sd.hasError = false;
-  state.error.sd.message = "";
+  stateControl.setError(ErrorSource::CFG, false, "");
 }
 
 

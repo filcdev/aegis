@@ -22,15 +22,14 @@ void DZNFCControl::begin()
 
   if (!versiondata) {
     logger.error("PN532 not found");
-    state.error.nfc.hasError = true;
-    state.error.nfc.message = "PN532 Disconn";
+    stateControl.setError(ErrorSource::NFC, true, "PN532 Disconn");
     return;
   }
 
   logger.info("PN532 Found. Firmware version: %x", versiondata);
   nfc.SAMConfig();
   nfc.setPassiveActivationRetries(0x01);
-  state.error.nfc.hasError = false;
+  stateControl.setError(ErrorSource::NFC, false);
 }
 
 void DZNFCControl::handle()
@@ -40,16 +39,14 @@ void DZNFCControl::handle()
     lastHealthCheck = now;
     uint32_t versiondata = nfc.getFirmwareVersion();
     if (!versiondata) {
-      if (!state.error.nfc.hasError) logger.error("PN532 Disconnected");
-      state.error.nfc.hasError = true;
-      state.error.nfc.message = "PN532 Disconn";
+      if (!stateControl.hasError(ErrorSource::NFC)) logger.error("PN532 Disconnected");
+      stateControl.setError(ErrorSource::NFC, true, "PN532 Disconn");
     } else {
-      if (state.error.nfc.hasError) logger.info("PN532 Reconnected");
-      state.error.nfc.hasError = false;
-      state.error.nfc.message = "";
+      if (stateControl.hasError(ErrorSource::NFC)) logger.info("PN532 Reconnected");
+      stateControl.setError(ErrorSource::NFC, false);
     }
   }
-  if (state.error.nfc.hasError) return;
+  if (stateControl.hasError(ErrorSource::NFC)) return;
   if (now - lastDetectionTime < 1000) return;
   uint8_t uid[7];
   uint8_t uidLength;
@@ -67,12 +64,12 @@ void DZNFCControl::handle()
     bool authorized = dbControl.isAuthorized(uidStr, name);
     if (authorized) {
       logger.info("Access Granted: %s", name.c_str());
-      state.header = "Welcome >>";
-      state.message = name;
+      stateControl.setHeader("Welcome >>");
+      stateControl.setMessage(name);
       stateControl.openDoor();
     } else {
       logger.info("Access Denied");
-      state.message = "Access Denied";
+      stateControl.setMessage("Access Denied");
     }
     wsControl.sendCardRead(uidStr, authorized, false);
   }

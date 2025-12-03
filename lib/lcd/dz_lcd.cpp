@@ -27,41 +27,41 @@ void DZLCDControl::printLn(const char* msg) {
   }
 }
 
-bool DZLCDControl::isUpdateNeeded() {
+bool DZLCDControl::isUpdateNeeded(const GlobalState& currentState) {
   return (
-    state.deviceState != lastState.deviceState || 
-    state.deviceState != DEVICE_STATE_IDLE ||
-    state.doorOpen != lastState.doorOpen ||
-    state.message != lastState.message
+    currentState.deviceState != lastState.deviceState || 
+    currentState.deviceState != DEVICE_STATE_IDLE ||
+    currentState.doorOpen != lastState.doorOpen ||
+    currentState.message != lastState.message
   );
 }
 
-void DZLCDControl::updateHeader() {
+void DZLCDControl::updateHeader(const GlobalState& currentState) {
   if(
     (backlightOn && 
-    state.deviceState != DEVICE_STATE_BOOTING && 
-    state.deviceState != DEVICE_STATE_UPDATING &&
-    lastTime != state.time) || state.header != lastState.header
+    currentState.deviceState != DEVICE_STATE_BOOTING && 
+    currentState.deviceState != DEVICE_STATE_UPDATING &&
+    lastTime != currentState.time) || currentState.header != lastState.header
   ) {
     lcd.setCursor(0, 0);
-    if(state.header != "") {
-      printLn(state.header.c_str());
+    if(currentState.header != "") {
+      printLn(currentState.header.c_str());
     } else {
       printLn("Aegis");
     }
     lcd.setCursor(11, 0);
-    lcd.print(state.time.c_str());
-    lastTime = state.time;
+    lcd.print(currentState.time.c_str());
+    lastTime = currentState.time;
   }
 }
 
-void DZLCDControl::cycleErrors() {
-  const int MAX_ERRORS = 6;
+void DZLCDControl::cycleErrors(const GlobalState& currentState) {
+  const int MAX_ERRORS = static_cast<int>(ErrorSource::COUNT);
   if (erIndex < 0 || erIndex >= MAX_ERRORS) erIndex = 0;
   
-  if (state.error.messages()[erIndex].empty()) {
+  if (currentState.error.messages()[erIndex].empty()) {
     for (int i = 0; i < MAX_ERRORS; ++i) {
-      if (!state.error.messages()[i].empty()) { erIndex = i; break; }
+      if (!currentState.error.messages()[i].empty()) { erIndex = i; break; }
     }
   }
   
@@ -70,24 +70,24 @@ void DZLCDControl::cycleErrors() {
     int next = erIndex;
     for (int i = 1; i <= MAX_ERRORS; ++i) {
       int idx = (erIndex + i) % MAX_ERRORS;
-      if (!state.error.messages()[idx].empty()) { next = idx; break; }
+      if (!currentState.error.messages()[idx].empty()) { next = idx; break; }
     }
     erIndex = next;
     lastErrorSwitch = now;
     lcd.setCursor(0, 1);
     lcd.print("E: ");
-    printLn(state.error.messages()[erIndex].c_str());
+    printLn(currentState.error.messages()[erIndex].c_str());
   }
 }
 
-void DZLCDControl::displayCurrentState() {
-  if (state.message != "") {
+void DZLCDControl::displayCurrentState(const GlobalState& currentState) {
+  if (currentState.message != "") {
       lcd.setCursor(0, 1);
-      printLn(state.message.c_str());
+      printLn(currentState.message.c_str());
       return;
   }
   
-  switch (state.deviceState)
+  switch (currentState.deviceState)
   {
     case DEVICE_STATE_BOOTING:
       lcd.clear();
@@ -97,7 +97,7 @@ void DZLCDControl::displayCurrentState() {
       printLn("Please wait...");
       break;
     case DEVICE_STATE_ERROR:
-      cycleErrors();
+      cycleErrors(currentState);
       break;
     case DEVICE_STATE_UPDATING:
       lcd.setCursor(0, 0);
@@ -114,9 +114,10 @@ void DZLCDControl::displayCurrentState() {
 
 void DZLCDControl::handle()
 { 
-  updateHeader();
+  GlobalState currentState = stateControl.getSnapshot();
+  updateHeader(currentState);
 
-  if(isUpdateNeeded()) {
+  if(isUpdateNeeded(currentState)) {
     if(!backlightOn) {
       lcd.backlight();
       lcd.display();
@@ -124,7 +125,7 @@ void DZLCDControl::handle()
     }
     lcd.display();
     backlightTmr = millis();
-    lastState = state;
+    lastState = currentState;
   } else {
     if(millis() - backlightTmr > BACKLIGHT_TIMEOUT) {
       lcd.noBacklight();
@@ -134,5 +135,5 @@ void DZLCDControl::handle()
     return;
   }
   
-  displayCurrentState();
+  displayCurrentState(currentState);
 }

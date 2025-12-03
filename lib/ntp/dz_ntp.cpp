@@ -29,8 +29,8 @@ void DZNTPControl::handle() {
         }
     }
     std::string formatted = getFormattedTime();
-    if (state.time != formatted) {
-        state.time = formatted;
+    if (stateControl.getTime() != formatted) {
+        stateControl.setTime(formatted);
     }
 }
 

@@ -19,13 +19,12 @@ void DZWSControl::begin() {
     webSocket.setExtraHeaders(("X-Aegis-Device-Token: " + cfg.api_key).c_str());
   } else {
     logger.error("WebSocket configuration missing");
-    state.error.webSocket.hasError = true;
-    state.error.webSocket.message = "No WS Config";
+    stateControl.setError(ErrorSource::WEBSOCKET, true, "No WS Config");
   }
 }
 
 void DZWSControl::handle() {
-  if(state.error.wifi.hasError) {
+  if(stateControl.hasError(ErrorSource::WIFI)) {
     return;
   }
   webSocket.loop();
@@ -46,13 +45,13 @@ void DZWSControl::handle() {
     }
   }
 
-  if (!state.error.webSocket.hasError && millis() - lastPingTime > PING_INTERVAL) {
+  if (!stateControl.hasError(ErrorSource::WEBSOCKET) && millis() - lastPingTime > PING_INTERVAL) {
     sendPing();
   }
 }
 
 void DZWSControl::send(String message) {
-  if (!state.error.wifi.hasError || !state.error.webSocket.hasError)
+  if (!stateControl.hasError(ErrorSource::WIFI) || !stateControl.hasError(ErrorSource::WEBSOCKET))
   {
     webSocket.sendTXT(message);
   }
@@ -74,15 +73,15 @@ void DZWSControl::sendPing() {
   storage["used"] = SPIFFS.usedBytes();
 
   JsonObject debug = data["debug"].to<JsonObject>();
-  debug["deviceState"] = state.deviceState;
+  debug["deviceState"] = stateControl.getDeviceState();
   debug["lastResetReason"] = getResetReason();
 
   JsonObject errors = debug["errors"].to<JsonObject>();
-  errors["nfc"] = state.error.nfc.hasError;
-  errors["sd"] = state.error.sd.hasError;
-  errors["wifi"] = state.error.wifi.hasError;
-  errors["db"] = state.error.db.hasError;
-  errors["ota"] = state.error.ota.hasError;
+  errors["nfc"] = stateControl.hasError(ErrorSource::NFC);
+  errors["sd"] = stateControl.hasError(ErrorSource::CFG);
+  errors["wifi"] = stateControl.hasError(ErrorSource::WIFI);
+  errors["db"] = stateControl.hasError(ErrorSource::DB);
+  errors["ota"] = stateControl.hasError(ErrorSource::OTA);
 
   String msg;
   serializeJson(doc, msg);
@@ -124,13 +123,11 @@ void DZWSControl::webSocketEvent(WStype_t type, uint8_t * payload, size_t length
   switch(type) {
     case WStype_DISCONNECTED:
       wsControl.logger.error("WebSocket Disconnected");
-      state.error.webSocket.hasError = true;
-      state.error.webSocket.message = "WS Disconn";
+      stateControl.setError(ErrorSource::WEBSOCKET, true, "WS Disconn");
       break;
     case WStype_CONNECTED:
       wsControl.logger.info("WebSocket Connected");
-      state.error.webSocket.hasError = false;
-      state.error.webSocket.message = "";
+      stateControl.setError(ErrorSource::WEBSOCKET, false);
       break;
     case WStype_TEXT:
       wsControl.logger.info("WebSocket Message Received: %s", payload);
@@ -140,8 +137,7 @@ void DZWSControl::webSocketEvent(WStype_t type, uint8_t * payload, size_t length
       break;
     case WStype_ERROR:
       wsControl.logger.error("WebSocket Error");
-      state.error.webSocket.hasError = true;
-      state.error.webSocket.message = "WS Error";
+      stateControl.setError(ErrorSource::WEBSOCKET, true, "WS Error");
       break;
     case WStype_PING:
     case WStype_PONG:
@@ -169,13 +165,12 @@ void DZWSControl::handleIncomingMessage(const std::string& message) {
     }
   } else if (strcmp(type, "open-door") == 0) {
     wsControl.logger.info("Remote open door request");
-    state.header = "Welcome >>";
-    state.doorOpen = true;
-    state.doorOpenTmr = millis();
+    stateControl.setHeader("Welcome >>");
+    stateControl.openDoor();
     if (wsDoc["name"].is<const char*>()) {
-      state.message = wsDoc["name"].as<const char*>();
+      stateControl.setMessage(wsDoc["name"].as<const char*>());
     } else {
-      state.message = "WebUser";
+      stateControl.setMessage("WebUser");
     }
   } else if (strcmp(type, "update") == 0) {
     wsControl.logger.info("Remote update request");

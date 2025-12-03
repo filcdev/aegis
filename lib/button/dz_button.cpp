@@ -17,8 +17,8 @@ void DZButton::handle() {
     if ((millis() - lastDebounceTime) > 500) {
       logger.info("Button pressed, opening door");
       stateControl.openDoor();
-      state.header = "Aegis  <<";
-      state.message = "Door Open";
+      stateControl.setHeader("Aegis  <<");
+      stateControl.setMessage("Door Open");
       lastDebounceTime = millis();
       wsControl.sendCardRead("", true, true);
     }

@@ -11,30 +11,28 @@ void DZOTAControl::begin()
   logger.info("Initializing OTA");
   if (cfg.cert == "") {
     logger.error("OTA Certificate missing");
-    state.error.ota.hasError = true;
-    state.error.ota.message = "OTA Cert Miss";
+    stateControl.setError(ErrorSource::OTA, true, "OTA Cert Miss");
   }
 }
 
 void DZOTAControl::handle()
 {
-  if (state.deviceState != DEVICE_STATE_UPDATING) return;
+  if (stateControl.getDeviceState() != DEVICE_STATE_UPDATING) return;
 
   HttpsOTAStatus_t otaStatus = HttpsOTA.status();
   switch (otaStatus) {
     case HTTPS_OTA_SUCCESS:
       logger.info("OTA Update Successful, rebooting...");
-      state.deviceState = DEVICE_STATE_IDLE;
-      state.message = "Rebooting...";
+      stateControl.setDeviceState(DEVICE_STATE_IDLE);
+      stateControl.setMessage("Rebooting...");
       delay(1000);
       ESP.restart();
       break;
       
     case HTTPS_OTA_FAIL:
       logger.error("OTA Update Failed");
-      state.deviceState = DEVICE_STATE_IDLE;
-      state.error.ota.hasError = true;
-      state.error.ota.message = "OTA Failed";
+      stateControl.setDeviceState(DEVICE_STATE_IDLE);
+      stateControl.setError(ErrorSource::OTA, true, "OTA Failed");
       break;
       
     default:
@@ -45,20 +43,19 @@ void DZOTAControl::handle()
 void DZOTAControl::startUpdate(const char* url)
 {
   logger.info("Starting OTA update from %s", url);
-  if (state.error.wifi.hasError) {
+  if (stateControl.hasError(ErrorSource::WIFI)) {
     logger.error("Cannot start OTA: WiFi error");
     return;
   }
 
   if (cfg.cert == "") {
     logger.error("Cannot start OTA: Certificate missing");
-    state.error.ota.hasError = true;
-    state.error.ota.message = "OTA Cert Miss";
+    stateControl.setError(ErrorSource::OTA, true, "OTA Cert Miss");
     return;
   }
 
-  state.error.ota.hasError = false;
-  state.deviceState = DEVICE_STATE_UPDATING;
-  state.message = "Updating...";
+  stateControl.setError(ErrorSource::OTA, false);
+  stateControl.setDeviceState(DEVICE_STATE_UPDATING);
+  stateControl.setMessage("Updating...");
   HttpsOTA.begin(url, cfg.cert.c_str(), true);
 }
