@@ -91,16 +91,15 @@ void DZConfigManager::parseConfigFile() {
     return;
   }
   
-  if (doc["hostname"]) cfg.hostname = doc["hostname"].as<String>();
-  if (doc["api_key"]) cfg.api_key = doc["api_key"].as<String>();
-  if (doc["wifi_ssid"]) cfg.wifi_ssid = doc["wifi_ssid"].as<String>();
-  if (doc["wifi_psk"]) cfg.wifi_psk = doc["wifi_psk"].as<String>();
-  if (doc["ws_addr"]) cfg.ws_addr = doc["ws_addr"].as<String>();
+  if (doc["hostname"]) cfg.hostname = doc["hostname"].as<std::string>();
+  if (doc["api_key"]) cfg.api_key = doc["api_key"].as<std::string>();
+  if (doc["wifi_ssid"]) cfg.wifi_ssid = doc["wifi_ssid"].as<std::string>();
+  if (doc["wifi_psk"]) cfg.wifi_psk = doc["wifi_psk"].as<std::string>();
+  if (doc["ws_addr"]) cfg.ws_addr = doc["ws_addr"].as<std::string>();
   if (doc["ws_port"]) cfg.ws_port = doc["ws_port"].as<uint16_t>();
-  if (doc["ws_path"]) cfg.ws_path = doc["ws_path"].as<String>();
-  if (doc["ota_url"]) cfg.ota_url = doc["ota_url"].as<String>();
-  if (doc["cert"]) cfg.cert = doc["cert"].as<String>();
-
+  if (doc["ws_path"]) cfg.ws_path = doc["ws_path"].as<std::string>();
+  if (doc["ota_url"]) cfg.ota_url = doc["ota_url"].as<std::string>();
+  if (doc["cert"]) cfg.cert = doc["cert"].as<std::string>();
   logger.info("Config loaded successfully");
   stateControl.setError(ErrorSource::CFG, false, "");
 }

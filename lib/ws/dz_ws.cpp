@@ -13,10 +13,13 @@ void DZWSControl::begin() {
   logger.info("Initializing WebSocket");
   _wsQueue = xQueueCreate(10, sizeof(WSEvent));
   if (cfg.ws_addr.length() > 0 && cfg.ws_port > 0 && cfg.ws_path.length() > 0 && cfg.api_key.length() > 0) {
-    webSocket.begin(cfg.ws_addr, cfg.ws_port, cfg.ws_path);
+    webSocket.begin(cfg.ws_addr.c_str(), cfg.ws_port, cfg.ws_path.c_str());
     webSocket.onEvent(webSocketEvent);
     webSocket.setReconnectInterval(RECONNECT_INTERVAL);
-    webSocket.setExtraHeaders(("X-Aegis-Device-Token: " + cfg.api_key).c_str());
+    _extraHeaders = "X-Aegis-Device-Token: ";
+    _extraHeaders += cfg.api_key.c_str();
+    webSocket.setExtraHeaders(_extraHeaders.c_str());
+    webSocket.enableHeartbeat(5000, 5000, 1); // Disable built-in heartbeat
   } else {
     logger.error("WebSocket configuration missing");
     stateControl.setError(ErrorSource::WEBSOCKET, true, "No WS Config");
@@ -27,6 +30,10 @@ void DZWSControl::handle() {
   if(stateControl.hasError(ErrorSource::WIFI)) {
     return;
   }
+  if(webSocket.isConnected() == false) {
+    logger.info("WebSocket not connected");
+  }
+  vTaskDelay(1); 
   webSocket.loop();
 
   if (_wsQueue != NULL) {
@@ -38,7 +45,7 @@ void DZWSControl::handle() {
         doc["uid"] = event.uid;
         doc["authorized"] = event.authorized;
         doc["isButton"] = event.isButton;
-        String msg;
+        std::string msg;
         serializeJson(doc, msg);
         send(msg);
       }
@@ -50,10 +57,10 @@ void DZWSControl::handle() {
   }
 }
 
-void DZWSControl::send(String message) {
-  if (!stateControl.hasError(ErrorSource::WIFI) || !stateControl.hasError(ErrorSource::WEBSOCKET))
+void DZWSControl::send(const std::string& message) {
+  if (!stateControl.hasError(ErrorSource::WIFI) && !stateControl.hasError(ErrorSource::WEBSOCKET))
   {
-    webSocket.sendTXT(message);
+    webSocket.sendTXT(message.c_str());
   }
 }
 
@@ -83,7 +90,7 @@ void DZWSControl::sendPing() {
   errors["db"] = stateControl.hasError(ErrorSource::DB);
   errors["ota"] = stateControl.hasError(ErrorSource::OTA);
 
-  String msg;
+  std::string msg;
   serializeJson(doc, msg);
   send(msg);
 }
@@ -101,7 +108,7 @@ void DZWSControl::sendCardRead(const std::string& uid, bool authorized, bool isB
   }
 }
 
-String DZWSControl::getResetReason() {
+std::string DZWSControl::getResetReason() {
   esp_reset_reason_t reason = esp_reset_reason();
   switch (reason) {
     case ESP_RST_UNKNOWN: return "ESP_RST_UNKNOWN";

@@ -18,6 +18,7 @@ private:
     PN532 nfc {pn532hsu};
     unsigned long lastDetectionTime = 0;
     unsigned long lastHealthCheck = 0;
+    unsigned long lastPollTime = 0;
 };
 
 #endif

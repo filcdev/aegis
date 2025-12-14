@@ -48,6 +48,9 @@ void DZNFCControl::handle()
   }
   if (stateControl.hasError(ErrorSource::NFC)) return;
   if (now - lastDetectionTime < 1000) return;
+  if (now - lastPollTime < 100) return;
+  lastPollTime = now;
+
   uint8_t uid[7];
   uint8_t uidLength;
   if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength)) {

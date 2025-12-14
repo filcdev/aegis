@@ -6,15 +6,15 @@
 #include "dz_logger.h"
 
 struct DeviceConfig {
-  String hostname = "DokZar-ESP32";
-  String api_key = "";
-  String wifi_ssid = "";
-  String wifi_psk = "";
-  String ws_addr = "";
+  std::string hostname = "DokZar-ESP32";
+  std::string api_key = "";
+  std::string wifi_ssid = "";
+  std::string wifi_psk = "";
+  std::string ws_addr = "";
   uint16_t ws_port = 443;
-  String ws_path = "/";
-  String ota_url = "";
-  String cert = "";
+  std::string ws_path = "/";
+  std::string ota_url = "";
+  std::string cert = "";
 };
 
 class DZConfigManager {

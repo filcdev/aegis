@@ -28,9 +28,14 @@ void DZNTPControl::handle() {
             }
         }
     }
-    std::string formatted = getFormattedTime();
-    if (stateControl.getTime() != formatted) {
-        stateControl.setTime(formatted);
+
+    static unsigned long lastTimeUpdate = 0;
+    if (currentMillis - lastTimeUpdate >= 1000) {
+        lastTimeUpdate = currentMillis;
+        std::string formatted = getFormattedTime();
+        if (stateControl.getTime() != formatted) {
+            stateControl.setTime(formatted);
+        }
     }
 }
 

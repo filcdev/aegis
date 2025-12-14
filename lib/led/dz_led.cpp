@@ -6,13 +6,13 @@ DZLEDControl::DZLEDControl() : pixels(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800),
 void DZLEDControl::testSequence() {
   pixels.fill(pixels.Color(255, 0, 0));
   pixels.show();
-  delay(100);
+  delay(500);
   pixels.fill(pixels.Color(0, 255, 0));
   pixels.show();
-  delay(100);
+  delay(500);
   pixels.fill(pixels.Color(0, 0, 255));
   pixels.show();
-  delay(100);
+  delay(500);
   pixels.clear();
   pixels.show();
 }
@@ -40,7 +40,7 @@ void DZLEDControl::begin()
 }
 
 void DZLEDControl::handleErrorState(unsigned long now) {
-    const unsigned long PULSE_MS = 50;
+    const unsigned long PULSE_MS = 200;
     const unsigned long GAP_BETWEEN_PULSES_MS = 200;
     const unsigned long GAP_AFTER_PAIR_MS = 1000;
 
@@ -56,7 +56,6 @@ void DZLEDControl::handleErrorState(unsigned long now) {
         pixels.show();
         errSeqState = 2;
         errSeqStart = now;
-        pixels.fill();
       } else {
         float phase = (float)elapsed / (float)PULSE_MS;
         float t = phase * 2.0f;
@@ -73,8 +72,6 @@ void DZLEDControl::handleErrorState(unsigned long now) {
         errSeqState = 3;
         errSeqStart = now;
       }
-      pixels.clear();
-      pixels.show();
       return;
     }
 
@@ -101,8 +98,6 @@ void DZLEDControl::handleErrorState(unsigned long now) {
         errSeqState = 1;
         errSeqStart = now;
       }
-      pixels.clear();
-      pixels.show();
       return;
     }
 }
@@ -115,7 +110,7 @@ void DZLEDControl::handleDoorState(unsigned long now, unsigned long dt) {
       doorPulsesDone = 0;
     }
     if (doorSeqState == 1) {
-      const float pulsePeriod = 500.0f;
+      const float pulsePeriod = 600.0f;
       doorPulsePhase += (dt / pulsePeriod);
       if (doorPulsePhase >= 1.0f) {
         doorPulsePhase -= floor(doorPulsePhase);
@@ -130,21 +125,25 @@ void DZLEDControl::handleDoorState(unsigned long now, unsigned long dt) {
       if (t > 1.0f) t = 2.0f - t;
       uint8_t v = (uint8_t)(t * 255.0f);
       for (int i = 0; i < 8; ++i) {
-        pixels.setPixelColor(i, pixels.Color(0, 0, v));
+        pixels.setPixelColor(i, pixels.Color(0, v, 0));
       }
+      pixels.show();
+    }
+    if (doorSeqState == 2) {
+      pixels.fill(pixels.Color(0, 255, 0));
       pixels.show();
     }
 }
 
 void DZLEDControl::handleIdleState(unsigned long dt) {
-    const float period = 3000.0f;
+    const float period = 4000.0f;
     breathePhase += (dt / period);
     if (breathePhase >= 1.0f) breathePhase -= floor(breathePhase);
     float t = breathePhase * 2.0f;
     if (t > 1.0f) t = 2.0f - t;
     uint8_t v = (uint8_t)(t * 200.0f);
     pixels.clear();
-    pixels.fill(pixels.Color(v, v, 0), LED_COUNT - 8, 8);
+    pixels.fill(pixels.Color(0, 0, v), 0, 8);
     pixels.show();
 }
 
@@ -158,18 +157,19 @@ void DZLEDControl::handle()
   bool isError = (stateControl.getDeviceState() == DEVICE_STATE_ERROR);
   bool isDoor = stateControl.isDoorOpen();
 
+  if (isDoor) {
+    handleDoorState(now, dt);
+    return;
+  } else {
+    doorSeqState = 0;
+  }
+
   if (isError) {
     handleErrorState(now);
     doorSeqState = 0;
     return;
   }
 
-  if (isDoor) {
-    handleDoorState(now, dt);
-    if (doorSeqState == 1) return;
-  } else {
-    doorSeqState = 0;
-  }
 
   if (stateControl.getDeviceState() == DEVICE_STATE_IDLE) {
     handleIdleState(dt);

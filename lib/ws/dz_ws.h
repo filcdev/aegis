@@ -25,7 +25,7 @@ public:
   DZWSControl();
   void begin();
   void handle();
-  void send(String message);
+  void send(const std::string& message);
   void sendCardRead(const std::string& uid, bool granted, bool isButton = false);
   Logger logger;
 
@@ -34,9 +34,10 @@ private:
   QueueHandle_t _wsQueue;
   static void webSocketEvent(WStype_t type, uint8_t * payload, size_t length);
   static void handleIncomingMessage(const std::string& message);
-  static String getResetReason();
+  static std::string getResetReason();
   void sendPing();
 
+  std::string _extraHeaders;
   unsigned long lastPingTime = 0;
   
   static const unsigned long PING_INTERVAL = 60000;

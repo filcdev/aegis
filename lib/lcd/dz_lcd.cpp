@@ -114,6 +114,10 @@ void DZLCDControl::displayCurrentState(const GlobalState& currentState) {
 
 void DZLCDControl::handle()
 { 
+  static unsigned long lastHandle = 0;
+  if (millis() - lastHandle < 200) return;
+  lastHandle = millis();
+
   GlobalState currentState = stateControl.getSnapshot();
   updateHeader(currentState);
 

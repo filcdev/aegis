@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_task_wdt.h"
 #include "dz_state.h"
 #include "dz_lcd.h"
 #include "dz_button.h"
@@ -28,6 +29,7 @@ DZLEDControl ledControl;
 void setup() {
   if(!loggerMutex) loggerMutex = xSemaphoreCreateMutex();
   Serial.begin(115200);
+  //esp_task_wdt_init(30, true);
   logger.info("Starting setup...");
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(DOOR_PIN, OUTPUT);
@@ -69,7 +71,7 @@ void AppTask(void *pvParameters) {
     lcd.handle();
     nfcControl.handle();
     ledControl.handle();
-    vTaskDelay(pdMS_TO_TICKS(50));
+    //vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
 
@@ -80,7 +82,7 @@ void loop() {
     xTaskCreatePinnedToCore(
       NetworkTask,
       "NetworkTask",
-      4096,
+      8192,
       NULL,
       1,
       NULL,
@@ -91,7 +93,7 @@ void loop() {
     xTaskCreatePinnedToCore(
       AppTask,
       "AppTask",
-      4096,
+      8192,
       NULL,
       1,
       NULL,
@@ -99,6 +101,6 @@ void loop() {
     );
 
     tasksCreated = true;
+    vTaskDelete(NULL);
   }
-  vTaskDelay(pdMS_TO_TICKS(10000));
 }
